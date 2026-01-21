@@ -1,5 +1,5 @@
 async function loadBanner() {
-  const res = await fetch("/data/banner.json");
+  const res = await fetch("banner.json");
   const data = await res.json();
   document.getElementById("banner-text").innerText = data.text;
 }

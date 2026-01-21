@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>배너 송출 관리자</title>
+  <link rel="stylesheet" href="banner.css">
+</head>
+<body>
+
+<h1>📢 하단 배너 송출</h1>
+
+<label>배너 문구</label>
+<textarea id="bannerText" placeholder="예) 오늘 증시 변동성 확대 주의"></textarea>
+
+<label>자동 해제 (분)</label>
+<input type="number" id="expire" value="0" min="0">
+
+<div class="buttons">
+  <button class="send" onclick="sendBanner()">송출</button>
+  <button class="clear" onclick="clearBanner()">해제</button>
+</div>
+
+<div id="status">대기중</div>
+
+<script src="banner.js"></script>
+</body>
+</html>

@@ -4,7 +4,7 @@ const path = require("path");
 
 const app = express();
 app.use(express.json());
-app.use(express.static(".")); // overlay / admin 같이 서비스
+app.use(express.static(__dirname));
 
 const BREAKING_PATH = path.join(__dirname, "overlay/breaking.json");
 
@@ -40,5 +40,5 @@ app.post("/api/clear", (_, res) => {
 });
 
 app.listen(8080, () => {
-  console.log("관리자 서버 실행: http://localhost:8080");
+  console.log("서버 실행: http://localhost:8080");
 });

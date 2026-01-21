@@ -1,79 +1,87 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SOOP 뉴스 오버레이</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- 우측 상단 정보 패널 -->
-<div id="right-panel">
+  <!-- 우측 상단 정보 패널 -->
+  <div id="right-panel">
 
-  <!-- 🌤 날씨 -->
-  <div id="weather-box">
-    <div class="weather-today">
-      <div class="weather-title">오늘 날씨</div>
-      <div class="weather-main">
-        <span id="weather-icon">☀️</span>
-        <span id="weather-temp">--°C</span>
+    <!-- 🌤 날씨 -->
+    <div id="weather-box">
+      <div class="weather-today">
+        <div class="weather-title">오늘 날씨</div>
+        <div class="weather-main">
+          <span id="weather-icon">☀️</span>
+          <span id="weather-temp">--°C</span>
+        </div>
+        <div id="weather-desc">--</div>
+        <div class="weather-range">
+          최저 <span id="today-min">--</span>°
+          · 최고 <span id="today-max">--</span>°
+        </div>
       </div>
-      <div id="weather-desc">--</div>
-      <div class="weather-range">
-        최저 <span id="today-min">--</span>°
-        · 최고 <span id="today-max">--</span>°
+
+      <div class="weather-tomorrow">
+        <div class="weather-title">내일</div>
+        <div class="weather-range">
+          <span id="tomorrow-icon">🌤️</span>
+          최저 <span id="tomorrow-min">--</span>°
+          · 최고 <span id="tomorrow-max">--</span>°
+        </div>
       </div>
     </div>
 
-    <div class="weather-tomorrow">
-      <div class="weather-title">내일</div>
-      <div class="weather-range">
-        <span id="tomorrow-icon">🌤️</span>
-        최저 <span id="tomorrow-min">--</span>°
-        · 최고 <span id="tomorrow-max">--</span>°
-      </div>
+    <!-- 📈 오늘 주요 주식동향 -->
+    <div id="stock-box">
+      <div class="section-title">📈 오늘 주요 주식동향</div>
+      <ul>
+        <li><span>코스피</span><span id="KOSPI">-</span></li>
+        <li><span>코스닥</span><span id="KOSDAQ">-</span></li>
+        <li><span>다우</span><span id="DOW">-</span></li>
+        <li><span>나스닥</span><span id="NASDAQ">-</span></li>
+      </ul>
     </div>
+
+    <!-- 🔻 우측 배너(공지/협찬/광고 문구) -->
+    <div id="banner-box">
+      <div id="banner-text">협찬 · 공지 · 안내 문구</div>
+    </div>
+
   </div>
 
-  <!-- 📈 오늘 주요 주식동향 -->
-  <div id="stock-box">
-    <div class="section-title">📈 오늘 주요 주식동향</div>
-    <ul>
-      <li><span>코스피</span><span id="kospi">-</span></li>
-      <li><span>코스닥</span><span id="kosdaq">-</span></li>
-      <li><span>다우</span><span id="dow">-</span></li>
-      <li><span>나스닥</span><span id="nasdaq">-</span></li>
-    </ul>
+  <!-- (옵션) 하단 배너바: 필요할 때 banner.js에서 켜서 사용 -->
+  <div id="banner-bar">
+    <span id="banner-bar-text"></span>
   </div>
 
-  <!-- 🔻 배너 영역 -->
-  <div id="banner-box">
-    <div id="banner-text">협찬 · 공지 · 안내 문구</div>
+  <!-- ⬇ 하단 뉴스 / 속보 바 -->
+  <div id="lower-bar">
+
+    <!-- 재난 속보 -->
+    <div id="breaking-box">
+      <span class="label">재난속보</span>
+      <span id="breaking-text"></span>
+    </div>
+
+    <!-- 일반 뉴스 -->
+    <div id="news-box">
+      <span id="news-text"></span>
+    </div>
+
   </div>
 
-</div>
+  <audio id="alert-sound" src="disaster.wav" preload="auto"></audio>
 
-<!-- ⬇ 하단 뉴스 / 속보 바 -->
-<div id="lower-bar">
-
-  <!-- 재난 속보 -->
-  <div id="breaking-box">
-    <span class="label">재난속보</span>
-    <span id="breaking-text"></span>
-  </div>
-
-  <!-- 일반 뉴스 -->
-  <div id="news-box">
-    <span id="news-text"></span>
-  </div>
-
-</div>
-
-<audio id="alert-sound" src="disaster.wav" preload="auto"></audio>
-
-<script src="script.js"></script>
-<script src="weather.js"></script>
-<script src="stocks.js"></script>
-<script src="banner.js"></script>
+  <!-- JS 로딩 순서: 메인 → 기능(날씨/주식/배너) → 테마(최종 덮어쓰기) -->
+  <script src="script.js"></script>
+  <script src="weather.js"></script>
+  <script src="stocks.js"></script>
+  <script src="banner.js"></script>
+  <script src="theme.js"></script>
 </body>
 </html>
