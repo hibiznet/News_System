@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>SOOP 뉴스 오버레이</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 우측 상단 정보 패널 -->
+<div id="right-panel">
+
+  <!-- 🌤 날씨 -->
+  <div id="weather-box">
+    <div class="weather-today">
+      <div class="weather-title">오늘 날씨</div>
+      <div class="weather-main">
+        <span id="weather-icon">☀️</span>
+        <span id="weather-temp">--°C</span>
+      </div>
+      <div id="weather-desc">--</div>
+      <div class="weather-range">
+        최저 <span id="today-min">--</span>°
+        · 최고 <span id="today-max">--</span>°
+      </div>
+    </div>
+
+    <div class="weather-tomorrow">
+      <div class="weather-title">내일</div>
+      <div class="weather-range">
+        <span id="tomorrow-icon">🌤️</span>
+        최저 <span id="tomorrow-min">--</span>°
+        · 최고 <span id="tomorrow-max">--</span>°
+      </div>
+    </div>
+  </div>
+
+  <!-- 📈 오늘 주요 주식동향 -->
+  <div id="stock-box">
+    <div class="section-title">📈 오늘 주요 주식동향</div>
+    <ul>
+      <li><span>코스피</span><span id="kospi">-</span></li>
+      <li><span>코스닥</span><span id="kosdaq">-</span></li>
+      <li><span>다우</span><span id="dow">-</span></li>
+      <li><span>나스닥</span><span id="nasdaq">-</span></li>
+    </ul>
+  </div>
+
+  <!-- 🔻 배너 영역 -->
+  <div id="banner-box">
+    <div id="banner-text">협찬 · 공지 · 안내 문구</div>
+  </div>
+
+</div>
+
+<!-- ⬇ 하단 뉴스 / 속보 바 -->
+<div id="lower-bar">
+
+  <!-- 재난 속보 -->
+  <div id="breaking-box">
+    <span class="label">재난속보</span>
+    <span id="breaking-text"></span>
+  </div>
+
+  <!-- 일반 뉴스 -->
+  <div id="news-box">
+    <span id="news-text"></span>
+  </div>
+
+</div>
+
+<audio id="alert-sound" src="disaster.wav" preload="auto"></audio>
+
+<script src="script.js"></script>
+<script src="weather.js"></script>
+<script src="stocks.js"></script>
+<script src="banner.js"></script>
+</body>
+</html>
