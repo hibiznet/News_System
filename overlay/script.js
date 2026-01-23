@@ -59,6 +59,61 @@ function formatCBS(text) {
   return `[재난문자] ${time} ${text}`;
 }
 
+/* ===============================
+   SOOP 인기방송 TOP5
+================================ */
+
+function renderSoopTop(items) {
+  const list = document.getElementById("soop-top-list");
+  if (!list) return;
+
+  list.innerHTML = "";
+  items.slice(0, 5).forEach((it) => {
+    const li = document.createElement("li");
+
+    const title = (it.title || "").trim() || "(제목 없음)";
+    const nick = (it.user_nick || "").trim();
+    const view = typeof it.view_cnt === "number" ? it.view_cnt.toLocaleString() : "-";
+
+    li.textContent = `${it.rank}. ${nick} - ${title}`;
+
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.textContent = `(${view})`;
+    li.appendChild(meta);
+
+    list.appendChild(li);
+  });
+}
+
+async function loadSoopTop() {
+  const box = document.getElementById("soop-top-box");
+  if (!box) return;
+
+  try {
+    const res = await fetch("/overlay/soop_top.json?t=" + Date.now(), { cache: "no-store" });
+    const data = await res.json();
+
+    // client_id 없거나 비활성/비어있으면 숨김
+    if (!data.items || data.items.length === 0 || data.disabled) {
+      box.style.display = "none";
+      return;
+    }
+
+    box.style.display = "";
+    renderSoopTop(data.items);
+
+  } catch (e) {
+    // 방송 안정: 실패 시 숨김
+    box.style.display = "none";
+  }
+}
+
+// 5초 주기 갱신
+setInterval(loadSoopTop, 5000);
+loadSoopTop();
+
+
 loadBreaking();
 loadNews();
 

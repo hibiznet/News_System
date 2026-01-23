@@ -9,9 +9,14 @@ import pytz
 # --- 뉴스 RSS ---
 import feedparser
 
+import requests
+import re
+
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SOOP_CLIENT_ID = os.environ.get("SOOP_CLIENT_ID", "").strip()
+SOOP_TOP_PATH = os.path.join(BASE_DIR, "overlay", "soop_top.json")
 
 # =========================
 # 파일 경로
@@ -193,6 +198,73 @@ def news_loop():
         time.sleep(300)  # 5분마다 갱신 (원하면 60~300초 조정 가능)
 
 # =========================
+# soop top10 자동 갱신
+# =========================
+def _write_soop_top_empty(reason="disabled"):
+    out = {
+        "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
+        "items": [],
+        "disabled": True,
+        "reason": reason
+    }
+    with open(SOOP_TOP_PATH, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+
+def _parse_jsonp(text: str):
+    # cb({...}) → {...}
+    m = re.search(r'^[a-zA-Z0-9_]+\((.*)\)\s*;?\s*$', text.strip(), re.DOTALL)
+    return json.loads(m.group(1)) if m else json.loads(text)
+
+def update_soop_top():
+    # 1) client_id 없으면 기능 OFF
+    if not SOOP_CLIENT_ID:
+        _write_soop_top_empty("missing_client_id")
+        return
+
+    url = "https://openapi.sooplive.co.kr/broad/list"
+    params = {
+        "client_id": SOOP_CLIENT_ID,
+        "order_type": "view_cnt",
+        "page_no": 1,
+        "callback": "cb"
+    }
+
+    try:
+        r = requests.get(url, params=params, timeout=8)
+        r.raise_for_status()
+        payload = _parse_jsonp(r.text)
+
+        # result 체크 (성공이 아닐 때도 OFF 처리)
+        if int(payload.get("result", 0)) <= 0:
+            _write_soop_top_empty(f"api_error:{payload.get('result')}:{payload.get('msg')}")
+            return
+
+        broads = (payload.get("broad") or [])[:5]
+        items = []
+        for i, b in enumerate(broads, start=1):
+            items.append({
+                "rank": i,
+                "user_id": b.get("user_id"),
+                "user_nick": b.get("user_nick"),
+                "broad_no": b.get("broad_no"),
+                "title": b.get("broad_title"),
+                "view_cnt": int(b.get("total_view_cnt") or 0),
+            })
+
+        out = {"updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"), "items": items}
+        with open(SOOP_TOP_PATH, "w", encoding="utf-8") as f:
+            json.dump(out, f, ensure_ascii=False, indent=2)
+
+    except Exception as e:
+        _write_soop_top_empty(f"exception:{type(e).__name__}")
+
+def soop_top_loop():
+    while True:
+        update_soop_top()
+        time.sleep(60)
+
+
+# =========================
 # 최초 파일이 없으면 기본값 생성
 # =========================
 def ensure_default_files():
@@ -218,6 +290,10 @@ def ensure_default_files():
         with open(STOCK_PATH, "w", encoding="utf-8") as f:
             json.dump({"updated": "", "domestic": {}, "global": {}}, f, ensure_ascii=False, indent=2)
 
+    if not os.path.exists(SOOP_TOP_PATH):
+        with open(SOOP_TOP_PATH, "w", encoding="utf-8") as f:
+            json.dump({"updated": "", "items": []}, f, ensure_ascii=False, indent=2)            
+
 # =========================
 # 실행
 # =========================
@@ -227,5 +303,6 @@ if __name__ == "__main__":
     # 백그라운드 자동 갱신 스레드 시작
     threading.Thread(target=stock_loop, daemon=True).start()
     threading.Thread(target=news_loop, daemon=True).start()
+    threading.Thread(target=soop_top_loop, daemon=True).start()
 
     app.run(port=8080, debug=True)

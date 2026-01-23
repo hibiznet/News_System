@@ -169,6 +169,36 @@ body {
 .down { color: var(--down-color); }
 
 /* ---------------------------------------------------------
+   SOOP TOP BOX
+--------------------------------------------------------- */
+#soop-top-box {
+  background: rgba(0,0,0,0.55);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+#soop-top-list {
+  margin: 8px 0 0;
+  padding-left: 18px; /* ol 숫자 들여쓰기 */
+}
+
+#soop-top-list li {
+  font-size: 13px;
+  line-height: 1.35;
+  margin: 6px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.95;
+}
+
+#soop-top-list .meta {
+  opacity: 0.75;
+  font-size: 12px;
+  margin-left: 6px;
+}
+
+/* ---------------------------------------------------------
    Banner Box (우측 패널 내 배너/공지)
    --------------------------------------------------------- */
 #banner-box {
