@@ -1,5 +1,5 @@
 {
-  "updated": "2026-02-13 01:16",
+  "updated": "2026-02-13 01:43",
   "domestic": {
     "KOSPI": {
       "price": 5522.27,
@@ -12,16 +12,16 @@
   },
   "global": {
     "NASDAQ": {
-      "price": 22728.36,
-      "change": -1.47
+      "price": 22726.19,
+      "change": -1.48
     },
     "DOW": {
-      "price": 49788.9,
-      "change": -0.65
+      "price": 49619.56,
+      "change": -0.99
     },
     "S&P500": {
-      "price": 6876.45,
-      "change": -0.91
+      "price": 6872.99,
+      "change": -0.96
     }
   }
 }
