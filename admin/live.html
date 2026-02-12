@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>방송 상태 설정</title>
+  <style>
+    body{background:#0b0b0b;color:#fff;font-family:"Noto Sans KR",sans-serif;padding:24px}
+    h1{margin:0 0 14px}
+    .row{display:flex;gap:10px;align-items:center;margin:10px 0}
+    select,input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:#121212;color:#fff}
+    input{width:100%}
+    button{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:800}
+    .primary{background:#1e7bff;color:#fff}
+    .danger{background:#ff3b3b;color:#fff}
+    #status{margin-top:10px;opacity:.85}
+  </style>
+</head>
+<body>
+
+<h1>🔴 방송 상태 배지</h1>
+
+<div class="row">
+  <label>모드</label>
+  <select id="mode">
+    <option value="live">생방송(Live)</option>
+    <option value="recorded">녹화방송</option>
+    <option value="off">숨김</option>
+  </select>
+
+  <button class="primary" onclick="save()">저장</button>
+</div>
+
+<div class="row">
+  <label>표시 문구(선택)</label>
+  <input id="text" placeholder="예) 생방송중 Live! / 녹화방송중" />
+</div>
+
+<div id="status">대기중</div>
+
+<script>
+async function save(){
+  const mode = document.getElementById("mode").value;
+  const text = document.getElementById("text").value.trim();
+
+  await fetch("/api/live", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ enabled:true, mode, text })
+  });
+
+  document.getElementById("status").innerText = "✅ 저장됨";
+}
+</script>
+
+</body>
+</html>

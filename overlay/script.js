@@ -60,30 +60,53 @@ function formatCBS(text) {
 }
 
 /* ===============================
-   SOOP 인기방송 TOP5
+   SOOP 인기방송 TOP5 (방송국 스타일)
 ================================ */
+function escapeHtml(s) {
+  return String(s || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 function renderSoopTop(items) {
   const list = document.getElementById("soop-top-list");
   if (!list) return;
 
-  list.innerHTML = "";
-  items.slice(0, 5).forEach((it) => {
-    const li = document.createElement("li");
+  const html = items.slice(0, 5).map((it) => {
+    const rank = Number(it.rank || 0);
+    const cls = rank === 1 ? "top1" : rank === 2 ? "top2" : rank === 3 ? "top3" : "";
 
-    const title = (it.title || "").trim() || "(제목 없음)";
-    const nick = (it.user_nick || "").trim();
-    const view = typeof it.view_cnt === "number" ? it.view_cnt.toLocaleString() : "-";
+    const title = escapeHtml((it.title || "").trim() || "(제목 없음)");
+    const nick = escapeHtml((it.user_nick || "").trim() || "(닉네임)");
+    const view = typeof it.view_cnt === "number" ? it.view_cnt : Number(it.view_cnt || 0);
 
-    li.textContent = `${it.rank}. ${nick} - ${title}`;
+    // 썸네일: API에서 thumb를 주면 사용, 없으면 플레이스홀더
+    const thumb = (it.thumb || "").trim();
+    const thumbTag = thumb
+      ? `<img src="${escapeHtml(thumb)}" loading="lazy" />`
+      : "";
 
-    const meta = document.createElement("span");
-    meta.className = "meta";
-    meta.textContent = `(${view})`;
-    li.appendChild(meta);
+    return `
+      <div class="soop-item ${cls}">
+        <div class="soop-thumb">
+          ${thumbTag}
+          <div class="soop-rank">${rank}</div>
+        </div>
+        <div class="soop-body">
+          <div class="soop-title">${title}</div>
+          <div class="soop-meta">
+            <span class="soop-nick">${nick}</span>
+            <span class="soop-view">👥 ${view.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
 
-    list.appendChild(li);
-  });
+  list.innerHTML = html;
 }
 
 async function loadSoopTop() {
@@ -104,15 +127,81 @@ async function loadSoopTop() {
     renderSoopTop(data.items);
 
   } catch (e) {
-    // 방송 안정: 실패 시 숨김
     box.style.display = "none";
   }
 }
 
-// 5초 주기 갱신
+
+/* ===============================
+   방송 상태 배지 (Live / Recorded)
+================================ */
+async function loadBroadcastStatus() {
+  try {
+    const res = await fetch("/overlay/live.json?t=" + Date.now(), { cache: "no-store" });
+    const data = await res.json();
+
+    const badge = document.getElementById("broadcast-badge");
+    const textEl = document.getElementById("broadcast-text");
+
+    if (!badge || !textEl) return;
+
+    // enabled=false 또는 mode=off면 숨김
+    const enabled = data?.enabled !== false;
+    const mode = (data?.mode || "live").toLowerCase(); // live | recorded | off
+    const text = (data?.text || "").trim();
+
+    if (!enabled || mode === "off") {
+      badge.style.display = "none";
+      return;
+    }
+
+    badge.style.display = "";
+    badge.classList.toggle("recorded", mode === "recorded");
+    textEl.textContent = text || (mode === "recorded" ? "녹화방송중" : "생방송중 Live!");
+
+  } catch (e) {
+    // 실패하면 그냥 숨김(방송 안정)
+    const badge = document.getElementById("broadcast-badge");
+    if (badge) badge.style.display = "none";
+  }
+}
+
+/* ===============================
+   현재 날짜 / 시간 표시
+================================ */
+function updateDateTime() {
+  const now = new Date();
+
+  const days = ["일요일","월요일","화요일","수요일","목요일","금요일","토요일"];
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const date = now.getDate();
+  const dayName = days[now.getDay()];
+
+  let hours = now.getHours();
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+
+  const ampm = hours >= 12 ? "오후" : "오전";
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+
+  const dateEl = document.getElementById("current-date");
+  const timeEl = document.getElementById("current-time");
+
+  if (!dateEl || !timeEl) return;
+
+  dateEl.textContent = `${year}년 ${month}월 ${date}일 ${dayName}`;
+  timeEl.textContent = `${ampm} ${hours}:${minutes}`;
+}
+
+setInterval(updateDateTime, 1000);
+updateDateTime();
+
+setInterval(loadBroadcastStatus, 2000);
+loadBroadcastStatus();
+
 setInterval(loadSoopTop, 5000);
 loadSoopTop();
-
 
 loadBreaking();
 loadNews();

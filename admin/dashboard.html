@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>관리자 대시보드</title>
+  <link rel="stylesheet" href="dashboard.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">🛠 관리자 대시보드</div>
+  <div class="right">
+    <a class="btn" href="/overlay/index.html" target="_blank">오버레이 미리보기</a>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-src="/admin/admin.html">🚨 재난속보</button>
+  <button class="tab" data-src="/admin/banner.html">📢 배너</button>
+  <button class="tab" data-src="/admin/theme.html">🎨 테마</button>
+  <button class="tab" data-src="/admin/multiview.html">🎥 레이아웃/iframe</button>
+</nav>
+
+<main class="content">
+  <iframe id="frame" src="/admin/admin.html" frameborder="0"></iframe>
+</main>
+
+<script src="dashboard.js"></script>
+</body>
+</html>

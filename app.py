@@ -26,6 +26,8 @@ BREAKING_PATH = os.path.join(BASE_DIR, "overlay", "breaking.json")
 BANNER_PATH   = os.path.join(BASE_DIR, "overlay", "banner.json")
 STOCK_PATH    = os.path.join(BASE_DIR, "overlay", "stock.json")
 NEWS_PATH     = os.path.join(BASE_DIR, "overlay", "news.json")
+LAYOUT_PATH = os.path.join(BASE_DIR, "overlay", "layout.json")
+LIVE_PATH = os.path.join(BASE_DIR, "overlay", "live.json")
 
 KST = pytz.timezone("Asia/Seoul")
 
@@ -263,6 +265,61 @@ def soop_top_loop():
         update_soop_top()
         time.sleep(60)
 
+# =========================
+# 화면 레이아웃 API
+# =========================
+@app.route("/api/layout", methods=["POST"])
+def layout_set():
+    data = request.json or {}
+    # 최소 방어
+    mode = int(data.get("mode", 1))
+    if mode not in (1, 2, 4):
+        mode = 1
+
+    items = data.get("items", [])
+    if not isinstance(items, list):
+        items = []
+
+    # 4개로 고정
+    fixed = []
+    for i in range(4):
+        src = ""
+        if i < len(items) and isinstance(items[i], dict):
+          src = str(items[i].get("src", "")).strip()
+        fixed.append({"src": src})
+
+    out = {"mode": mode, "items": fixed}
+
+    with open(LAYOUT_PATH, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+
+    return jsonify(ok=True)
+
+@app.route("/api/layout/clear", methods=["POST"])
+def layout_clear():
+    out = {"mode": 1, "items": [{"src": ""}, {"src": ""}, {"src": ""}, {"src": ""}]}
+    with open(LAYOUT_PATH, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+    return jsonify(ok=True)
+
+# =========================
+# 라이브 방송 화면 API
+# =========================
+@app.route("/api/live", methods=["POST"])
+def live_set():
+    data = request.json or {}
+    enabled = bool(data.get("enabled", True))
+    mode = str(data.get("mode", "live")).lower()
+    if mode not in ("live", "recorded", "off"):
+        mode = "live"
+    text = str(data.get("text", "")).strip()
+
+    out = {"enabled": enabled, "mode": mode, "text": text}
+    with open(LIVE_PATH, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+
+    return jsonify(ok=True)
+
 
 # =========================
 # 최초 파일이 없으면 기본값 생성
@@ -292,7 +349,16 @@ def ensure_default_files():
 
     if not os.path.exists(SOOP_TOP_PATH):
         with open(SOOP_TOP_PATH, "w", encoding="utf-8") as f:
-            json.dump({"updated": "", "items": []}, f, ensure_ascii=False, indent=2)            
+            json.dump({"updated": "", "items": []}, f, ensure_ascii=False, indent=2)
+
+    if not os.path.exists(LAYOUT_PATH):
+        with open(LAYOUT_PATH, "w", encoding="utf-8") as f:
+            json.dump({"mode": 1, "items": [{"src": ""}, {"src": ""}, {"src": ""}, {"src": ""}]}, f, ensure_ascii=False, indent=2)
+
+    if not os.path.exists(LIVE_PATH):
+        with open(LIVE_PATH, "w", encoding="utf-8") as f:
+            json.dump({"enabled": True, "mode": "live", "text": "생방송중 Live!"}, f, ensure_ascii=False, indent=2)
+
 
 # =========================
 # 실행

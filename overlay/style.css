@@ -311,3 +311,201 @@ body {
   from { transform: translateX(100%); }
   to   { transform: translateX(-110%); }
 }
+
+/* ---------------------------------------------------------
+   SOOP TOP BOX (방송국 스타일)
+--------------------------------------------------------- */
+#soop-top-box {
+  background: rgba(0,0,0,0.55);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.soop-top-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* 한 줄(아이템) */
+.soop-item {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+/* 썸네일 */
+.soop-thumb {
+  width: 44px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.12);
+  overflow: hidden;
+  position: relative;
+}
+
+.soop-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 순위 배지 */
+.soop-rank {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+/* 본문 */
+.soop-body {
+  min-width: 0; /* ellipsis 위해 필요 */
+}
+
+.soop-title {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;  /* 두 줄 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  opacity: 0.98;
+}
+
+.soop-meta {
+  margin-top: 3px;
+  font-size: 12px;
+  opacity: 0.75;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.soop-nick {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.soop-view {
+  flex: 0 0 auto;
+}
+
+/* TOP3 강조 */
+.soop-item.top1 .soop-rank { background: rgba(255, 215, 0, 0.22); border-color: rgba(255, 215, 0, 0.35); }
+.soop-item.top2 .soop-rank { background: rgba(192, 192, 192, 0.18); border-color: rgba(192, 192, 192, 0.32); }
+.soop-item.top3 .soop-rank { background: rgba(205, 127, 50, 0.18); border-color: rgba(205, 127, 50, 0.32); }
+
+/* =========================================================
+   MULTIVIEW (iframe grid)
+   ========================================================= */
+#multiview {
+  position: fixed;
+  inset: 0;            /* top/right/bottom/left = 0 */
+  z-index: 1;          /* 우측패널/하단바보다 뒤 */
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+/* 레이아웃 */
+#multiview.layout-1 { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+#multiview.layout-2 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+#multiview.layout-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+
+/* 슬롯 */
+.mv-slot {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.mv-slot iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* 오버레이 요소가 위에 보이도록 */
+#right-panel { z-index: 50; }
+#lower-bar   { z-index: 40; }
+#banner-bar  { z-index: 45; }
+
+/* =========================================================
+   Broadcast Badge (Live / Recorded)
+========================================================= */
+.broadcast-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+  font-size: 13px;
+  background: rgba(255, 0, 0, 0.14);
+  border: 1px solid rgba(255, 0, 0, 0.25);
+}
+
+.broadcast-badge .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #ff3b3b;
+  box-shadow: 0 0 10px rgba(255, 59, 59, 0.8);
+  animation: livePulse 1s infinite;
+}
+
+/* 녹화 방송 스타일 */
+.broadcast-badge.recorded {
+  background: rgba(0, 170, 255, 0.14);
+  border: 1px solid rgba(0, 170, 255, 0.25);
+}
+
+.broadcast-badge.recorded .dot {
+  background: #00aaff;
+  box-shadow: 0 0 10px rgba(0, 170, 255, 0.7);
+  animation: none;
+}
+
+@keyframes livePulse {
+  50% { opacity: 0.35; transform: scale(0.9); }
+}
+
+/* =========================================================
+   Date / Time Box
+========================================================= */
+.datetime-box {
+  margin-bottom: 12px;
+  padding: 6px 0 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+#current-date {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+#current-time {
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+}

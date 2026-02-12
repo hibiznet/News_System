@@ -7,12 +7,28 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- 🎥 멀티뷰(iframe) 영역 -->
+  <div id="multiview"></div>
 
   <!-- 우측 상단 정보 패널 -->
   <div id="right-panel">
 
     <!-- 🌤 날씨 -->
     <div id="weather-box">
+
+      <!-- 🔴 방송 상태 -->
+      <div id="broadcast-badge" class="broadcast-badge" style="display:none;">
+        <span id="broadcast-dot" class="dot"></span>
+        <span id="broadcast-text">생방송중 Live!</span>
+      </div>
+
+      <!-- 🗓 현재 날짜/시간 -->
+      <div id="datetime-box" class="datetime-box">
+        <div id="current-date">--년--월 --일 ---요일</div>
+        <div id="current-time">--:--</div>
+      </div>
+
+
       <div class="weather-today">
         <div class="weather-title">오늘 날씨</div>
         <div class="weather-main">
@@ -47,11 +63,12 @@
       </ul>
     </div>
 
-    <!-- 📺 SOOP 인기방송 TOP5 -->
+    <!-- 📺 SOOP 인기방송 TOP5 (방송국 스타일) -->
     <div id="soop-top-box" style="display:none;">
       <div class="section-title">📺 SOOP 인기방송 TOP5</div>
-      <ol id="soop-top-list"></ol>
+      <div id="soop-top-list" class="soop-top-list"></div>
     </div>
+
 
     <!-- 🔻 우측 배너(공지/협찬/광고 문구) -->
     <div id="banner-box">
@@ -89,5 +106,7 @@
   <script src="stocks.js"></script>
   <script src="banner.js"></script>
   <script src="theme.js"></script>
+  <script src="multiview.js"></script>
+
 </body>
 </html>
