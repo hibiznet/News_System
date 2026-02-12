@@ -3,12 +3,13 @@ import json, threading, os, time, re
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 # --- 주식 ---
 import yfinance as yf
 import pytz
 
-# --- 뉴스 RSS ---
+# --- 뉴스 RSS ---c
 import feedparser
 
 import requests
@@ -326,57 +327,82 @@ def live_set():
 # =========================
 # 신규 스트리머 정보 갖고 오는 API
 # =========================
-#ROOKIE_URL = "https://afevent2.sooplive.co.kr/app/rank/index.php?szWhich=rookie"
-ROOKIE_URL = "https://afevent2.afreecatv.com/app/rank/index.php?szWhich=rookie"
+ROOKIE_API_URL = "https://afevent2.sooplive.co.kr/app/rank/api.php"
 
 def update_rookie():
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.6",
-    }
-
     try:
-        r = requests.get(ROOKIE_URL, headers=headers, timeout=12)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "X-Requested-With": "XMLHttpRequest",
+            "Origin": "https://afevent2.sooplive.co.kr",
+            "Referer": "https://afevent2.sooplive.co.kr/app/rank/index.php?szWhich=rookie",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        }
+
+        payload = {
+            "szWhich": "rookie",
+            "nPage": "1",
+            "szSearch": "",
+            "szGender": "A",
+        }
+
+        r = requests.post(ROOKIE_API_URL, headers=headers, data=payload, timeout=12)
         r.raise_for_status()
+        data = r.json()
 
-        soup = BeautifulSoup(r.text, "html.parser")
-        text = soup.get_text(" ", strip=True).replace("\xa0", " ")
-        text = re.sub(r"\s+", " ", text)
-
-        # ✅ 랭킹 홈의 "신입 스트리머 ... 더보기" 구간
-        m = re.search(r"신입\s*스트리머\s*(.*?)\s*더보기", text, re.DOTALL)
-        if not m:
+        arr = data.get("ALL_RANK") or []
+        if not isinstance(arr, list) or len(arr) == 0:
             out = {
                 "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
                 "items": [],
                 "disabled": True,
-                "reason": "rookie_section_not_found"
+                "reason": "api_all_rank_empty",
+                "debug": {"RESULT": data.get("RESULT"), "TOTAL_CNT": data.get("TOTAL_CNT")}
             }
             with open(ROOKIE_PATH, "w", encoding="utf-8") as f:
                 json.dump(out, f, ensure_ascii=False, indent=2)
             return
 
-        block = m.group(1).strip()
-
-        # 예시 텍스트(실제로 이렇게 들어있음):
-        # 1 ♡비니♡ up 1 2 구하리♡ down 1 ... 10 해링이 down 7
-        item_re = re.compile(
-            r"(?<!\d)(10|[1-9])\s+(.+?)\s+(up|down|same|NEW)\s*([0-9]+)?(?=\s+(10|[1-9])\s+|$)",
-            re.IGNORECASE
-        )
-
         items = []
-        for mm in item_re.finditer(block):
-            rank = int(mm.group(1))
-            name = mm.group(2).strip()
-            move = mm.group(3).lower()
-            delta = mm.group(4)
-            delta = int(delta) if (delta and delta.isdigit()) else None
+        for it in arr[:10]:
+            bj_id = str(it.get("bj_id", "")).strip()
+            bj_nick = str(it.get("bj_nick", "")).strip()
+            station_title = str(it.get("station_title", "")).strip()
+            is_broad = bool(it.get("is_broad", False))
+
+            # 현재 순위/지난 순위
+            try:
+                rank_now = int(it.get("total_rank") or 0)
+            except:
+                rank_now = 0
+            try:
+                rank_last = int(it.get("total_rank_last") or 0)
+            except:
+                rank_last = 0
+
+            # 변동 계산: last(이전) - now(현재) => +면 상승
+            move = "same"
+            delta = None
+            if rank_now > 0 and rank_last > 0:
+                diff = rank_last - rank_now
+                if diff > 0:
+                    move = "up"
+                    delta = diff
+                elif diff < 0:
+                    move = "down"
+                    delta = abs(diff)
+            elif rank_now > 0 and rank_last == 0:
+                move = "new"
+                delta = None
 
             items.append({
-                "rank": rank,
-                "name": name,
-                "move": "new" if move == "new" else move,
+                "rank": rank_now if rank_now > 0 else len(items) + 1,
+                "name": bj_nick or bj_id,
+                "bj_id": bj_id,
+                "title": station_title,
+                "is_live": is_broad,
+                "move": move,
                 "delta": delta
             })
 
@@ -387,12 +413,6 @@ def update_rookie():
             "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
             "items": items
         }
-
-        # 안전장치: 그래도 비면 block 일부 저장
-        if len(items) == 0:
-            out["disabled"] = True
-            out["reason"] = "parsed_but_empty"
-            out["debug"] = block[:220]
 
         with open(ROOKIE_PATH, "w", encoding="utf-8") as f:
             json.dump(out, f, ensure_ascii=False, indent=2)
@@ -408,7 +428,6 @@ def update_rookie():
         }
         with open(ROOKIE_PATH, "w", encoding="utf-8") as f:
             json.dump(out, f, ensure_ascii=False, indent=2)
-
 
 def rookie_loop():
     while True:

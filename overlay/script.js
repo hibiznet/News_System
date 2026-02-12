@@ -203,17 +203,26 @@ function renderRookie(items) {
 
   const html = items.slice(0, 10).map(it => {
     const move = (it.move || "same").toLowerCase();
-    const delta = (it.delta != null) ? it.delta : "";
-    const cls = move === "up" ? "rookie-up" : move === "down" ? "rookie-down" : move === "new" ? "rookie-new" : "rookie-same";
+    const delta = it.delta;
 
     const badge =
-      move === "up" ? `▲${delta}` :
-      move === "down" ? `▼${delta}` :
+      move === "up" ? `▲${delta ?? ""}` :
+      move === "down" ? `▼${delta ?? ""}` :
       move === "new" ? `NEW` : `-`;
+
+    const cls =
+      move === "up" ? "rookie-up" :
+      move === "down" ? "rookie-down" :
+      move === "new" ? "rookie-new" : "rookie-same";
+
+    const live = it.is_live ? `<span class="rookie-live">LIVE</span>` : "";
+
+    // 닉네임
+    const name = String(it.name || "").replaceAll("<","&lt;").replaceAll(">","&gt;");
 
     return `
       <div class="rookie-item">
-        <div class="rookie-left">${it.rank}. ${String(it.name || "").replaceAll("<","&lt;").replaceAll(">","&gt;")}</div>
+        <div class="rookie-left">${it.rank}. ${name} ${live}</div>
         <div class="rookie-right ${cls}">${badge}</div>
       </div>
     `;
@@ -221,6 +230,7 @@ function renderRookie(items) {
 
   list.innerHTML = html;
 }
+
 
 async function loadRookie() {
   const box = document.getElementById("rookie-box");

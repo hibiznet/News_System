@@ -1,6 +1,95 @@
 {
-  "updated": "2026-02-13 00:28",
-  "items": [],
-  "disabled": true,
-  "reason": "rookie_section_not_found"
+  "updated": "2026-02-13 01:16",
+  "items": [
+    {
+      "rank": 1,
+      "name": "구하리♡",
+      "bj_id": "9hari8",
+      "title": "",
+      "is_live": false,
+      "move": "up",
+      "delta": 1
+    },
+    {
+      "rank": 2,
+      "name": "♡비니♡",
+      "bj_id": "bean1214",
+      "title": "",
+      "is_live": false,
+      "move": "down",
+      "delta": 1
+    },
+    {
+      "rank": 3,
+      "name": "fifatargrean",
+      "bj_id": "fifatargrean",
+      "title": "",
+      "is_live": true,
+      "move": "up",
+      "delta": 1
+    },
+    {
+      "rank": 4,
+      "name": "미진이",
+      "bj_id": "kjhanna824",
+      "title": "",
+      "is_live": false,
+      "move": "up",
+      "delta": 22
+    },
+    {
+      "rank": 5,
+      "name": "DK쇼메쇼메",
+      "bj_id": "showmakerr",
+      "title": "",
+      "is_live": false,
+      "move": "same",
+      "delta": null
+    },
+    {
+      "rank": 6,
+      "name": "DK스매쉬",
+      "bj_id": "tlsrmawo",
+      "title": "",
+      "is_live": false,
+      "move": "up",
+      "delta": 13
+    },
+    {
+      "rank": 7,
+      "name": "지한이또",
+      "bj_id": "jihan110",
+      "title": "",
+      "is_live": false,
+      "move": "up",
+      "delta": 28
+    },
+    {
+      "rank": 8,
+      "name": "김군",
+      "bj_id": "dkcjfhrm",
+      "title": "롤붕이^^",
+      "is_live": false,
+      "move": "down",
+      "delta": 5
+    },
+    {
+      "rank": 9,
+      "name": "윤콩♥",
+      "bj_id": "0823kdh",
+      "title": "",
+      "is_live": true,
+      "move": "up",
+      "delta": 137
+    },
+    {
+      "rank": 10,
+      "name": "rebirthztv",
+      "bj_id": "rebirthztv",
+      "title": "",
+      "is_live": true,
+      "move": "up",
+      "delta": 51
+    }
+  ]
 }
