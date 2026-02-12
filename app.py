@@ -1,9 +1,8 @@
 from flask import Flask, request, jsonify, send_from_directory
-import json, threading, os, time
+import json, threading, os, time, re
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
-
 
 # --- 주식 ---
 import yfinance as yf
@@ -327,121 +326,73 @@ def live_set():
 # =========================
 # 신규 스트리머 정보 갖고 오는 API
 # =========================
-ROOKIE_URL = "https://afevent2.sooplive.co.kr/app/rank/index.php"
+#ROOKIE_URL = "https://afevent2.sooplive.co.kr/app/rank/index.php?szWhich=rookie"
+ROOKIE_URL = "https://afevent2.afreecatv.com/app/rank/index.php?szWhich=rookie"
+
 def update_rookie():
-    """
-    랭킹 페이지에서 '신입 스트리머' TOP10만 파싱하여 overlay/rookie.json 생성
-    """
     headers = {
-        "User-Agent": "Mozilla/5.0 (OverlayBot/1.0)",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.6",
     }
 
     try:
-        r = requests.get(ROOKIE_URL, headers=headers, timeout=10)
+        r = requests.get(ROOKIE_URL, headers=headers, timeout=12)
         r.raise_for_status()
-        html = r.text
 
-        #soup = BeautifulSoup(html, "lxml")
-        soup = BeautifulSoup(html, "html.parser")
+        soup = BeautifulSoup(r.text, "html.parser")
+        text = soup.get_text(" ", strip=True).replace("\xa0", " ")
+        text = re.sub(r"\s+", " ", text)
 
-        # 1) '신입 스트리머' 라벨을 포함한 요소 찾기
-        label = soup.find(string=lambda s: isinstance(s, str) and "신입 스트리머" in s)
-        if not label:
-            # 구조 변경/탐지 실패 시 빈 데이터 유지
-            out = {"updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"), "items": [], "disabled": True, "reason": "label_not_found"}
+        # ✅ 랭킹 홈의 "신입 스트리머 ... 더보기" 구간
+        m = re.search(r"신입\s*스트리머\s*(.*?)\s*더보기", text, re.DOTALL)
+        if not m:
+            out = {
+                "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
+                "items": [],
+                "disabled": True,
+                "reason": "rookie_section_not_found"
+            }
             with open(ROOKIE_PATH, "w", encoding="utf-8") as f:
                 json.dump(out, f, ensure_ascii=False, indent=2)
             return
 
-        # label이 속한 컨테이너(섹션 박스) 쪽으로 올라가서, 그 안에서 순위 항목들을 찾는다
-        section = label.parent
-        for _ in range(6):
-            if not section:
-                break
-            # 섹션 안에 순위 관련 텍스트가 좀 있다면 멈춤
-            txt = section.get_text(" ", strip=True)
-            if "더보기" in txt and ("up" in txt or "down" in txt or "same" in txt or "NEW" in txt):
-                break
-            section = section.parent
+        block = m.group(1).strip()
 
-        if not section:
-            out = {"updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"), "items": [], "disabled": True, "reason": "section_not_found"}
-            with open(ROOKIE_PATH, "w", encoding="utf-8") as f:
-                json.dump(out, f, ensure_ascii=False, indent=2)
-            return
-
-        # 2) 섹션 텍스트를 기반으로 라인 파싱(구조가 조금 바뀌어도 버티는 방식)
-        # 예: "신입 스트리머 1 ♡비니♡ up 1 2 구하리♡ down 1 ..."
-        raw = section.get_text(" ", strip=True)
-        raw = raw.replace("\xa0", " ")
-
-        # '신입 스트리머' 이후만 잘라서 처리
-        idx = raw.find("신입 스트리머")
-        chunk = raw[idx:] if idx >= 0 else raw
-
-        tokens = chunk.split()
+        # 예시 텍스트(실제로 이렇게 들어있음):
+        # 1 ♡비니♡ up 1 2 구하리♡ down 1 ... 10 해링이 down 7
+        item_re = re.compile(
+            r"(?<!\d)(10|[1-9])\s+(.+?)\s+(up|down|same|NEW)\s*([0-9]+)?(?=\s+(10|[1-9])\s+|$)",
+            re.IGNORECASE
+        )
 
         items = []
-        i = 0
-
-        # tokens에서 "신입" "스트리머" 다음부터 순위 숫자(1~10) 기반으로 읽기
-        # 기대 패턴: [신입, 스트리머, 1, 닉, up/down/same/NEW, (숫자?), 2, 닉, ...]
-        # 혹시 "신입 스트리머"가 한 토큰이면 대비
-        # 1) 시작 위치 찾기: 첫 숫자(1) 찾기
-        while i < len(tokens) and tokens[i] != "1":
-            i += 1
-
-        def is_move(tok: str) -> bool:
-            t = tok.lower()
-            return t in ("up", "down", "same", "new", "NEW".lower())
-
-        while i < len(tokens) and len(items) < 10:
-            # rank
-            if not tokens[i].isdigit():
-                i += 1
-                continue
-
-            rank = int(tokens[i])
-            if rank < 1 or rank > 10:
-                i += 1
-                continue
-            i += 1
-
-            # name: 다음 토큰이 이동표시(up/down/...) 전까지 이어붙이기
-            name_parts = []
-            while i < len(tokens) and not is_move(tokens[i]) and not tokens[i].isdigit():
-                name_parts.append(tokens[i])
-                i += 1
-
-            name = " ".join(name_parts).strip()
-
-            move = "same"
-            delta = None
-
-            if i < len(tokens) and is_move(tokens[i]):
-                move = tokens[i].lower()
-                i += 1
-                # move 뒤에 숫자(변동폭)가 올 수도 있고 없을 수도
-                if i < len(tokens) and tokens[i].isdigit():
-                    delta = int(tokens[i])
-                    i += 1
-
-            # 더보기/다른 섹션 시작 전에 종료
-            if name == "더보기" or name == "":
-                break
+        for mm in item_re.finditer(block):
+            rank = int(mm.group(1))
+            name = mm.group(2).strip()
+            move = mm.group(3).lower()
+            delta = mm.group(4)
+            delta = int(delta) if (delta and delta.isdigit()) else None
 
             items.append({
                 "rank": rank,
                 "name": name,
-                "move": move,     # up/down/same/new
-                "delta": delta    # 숫자 없으면 null
+                "move": "new" if move == "new" else move,
+                "delta": delta
             })
+
+        items.sort(key=lambda x: x["rank"])
+        items = items[:10]
 
         out = {
             "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
             "items": items
         }
+
+        # 안전장치: 그래도 비면 block 일부 저장
+        if len(items) == 0:
+            out["disabled"] = True
+            out["reason"] = "parsed_but_empty"
+            out["debug"] = block[:220]
 
         with open(ROOKIE_PATH, "w", encoding="utf-8") as f:
             json.dump(out, f, ensure_ascii=False, indent=2)
@@ -449,7 +400,6 @@ def update_rookie():
         print("[ROOKIE UPDATED]", out["updated"], "items:", len(items))
 
     except Exception as e:
-        # 실패해도 빈 값으로 안전하게
         out = {
             "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
             "items": [],
@@ -459,13 +409,11 @@ def update_rookie():
         with open(ROOKIE_PATH, "w", encoding="utf-8") as f:
             json.dump(out, f, ensure_ascii=False, indent=2)
 
+
 def rookie_loop():
     while True:
         update_rookie()
-        time.sleep(300)  # 5분마다 갱신
-
-
-
+        time.sleep(300)  # 5분마다 갱신            
 
 # =========================
 # 최초 파일이 없으면 기본값 생성
