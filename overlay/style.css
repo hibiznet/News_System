@@ -509,3 +509,47 @@ body {
   font-weight: 900;
   letter-spacing: -0.3px;
 }
+
+/* ---------------------------------------------------------
+   ROOKIE BOX
+--------------------------------------------------------- */
+#rookie-box {
+  background: rgba(0,0,0,0.55);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.rookie-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.rookie-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.rookie-left {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.95;
+  font-weight: 700;
+}
+
+.rookie-right {
+  flex: 0 0 auto;
+  font-size: 12px;
+  opacity: 0.85;
+  font-weight: 800;
+}
+
+.rookie-up { color: var(--up-color); }
+.rookie-down { color: var(--down-color); }
+.rookie-same { color: rgba(255,255,255,0.75); }
+.rookie-new { color: #ffd54a; }

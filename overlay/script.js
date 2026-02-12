@@ -194,6 +194,57 @@ function updateDateTime() {
   timeEl.textContent = `${ampm} ${hours}:${minutes}`;
 }
 
+/* ===============================
+   신입 스트리머 TOP10
+================================ */
+function renderRookie(items) {
+  const list = document.getElementById("rookie-list");
+  if (!list) return;
+
+  const html = items.slice(0, 10).map(it => {
+    const move = (it.move || "same").toLowerCase();
+    const delta = (it.delta != null) ? it.delta : "";
+    const cls = move === "up" ? "rookie-up" : move === "down" ? "rookie-down" : move === "new" ? "rookie-new" : "rookie-same";
+
+    const badge =
+      move === "up" ? `▲${delta}` :
+      move === "down" ? `▼${delta}` :
+      move === "new" ? `NEW` : `-`;
+
+    return `
+      <div class="rookie-item">
+        <div class="rookie-left">${it.rank}. ${String(it.name || "").replaceAll("<","&lt;").replaceAll(">","&gt;")}</div>
+        <div class="rookie-right ${cls}">${badge}</div>
+      </div>
+    `;
+  }).join("");
+
+  list.innerHTML = html;
+}
+
+async function loadRookie() {
+  const box = document.getElementById("rookie-box");
+  if (!box) return;
+
+  try {
+    const res = await fetch("/overlay/rookie.json?t=" + Date.now(), { cache: "no-store" });
+    const data = await res.json();
+
+    if (!data.items || data.items.length === 0 || data.disabled) {
+      box.style.display = "none";
+      return;
+    }
+
+    box.style.display = "";
+    renderRookie(data.items);
+  } catch (e) {
+    box.style.display = "none";
+  }
+}
+
+setInterval(loadRookie, 5000);
+loadRookie();
+
 setInterval(updateDateTime, 1000);
 updateDateTime();
 
