@@ -1,13 +1,18 @@
 {
-  "updated": "2026-02-16 03:42",
-  "preset": "jp_backend",
-  "presetName": "🇯🇵 Backend Engineer",
+  "updated": "2026-02-16 04:12",
+  "preset": "jp_se_tokyo",
+  "presetName": "🇯🇵 Tokyo - Software Engineer",
   "ui": {
     "count": 10,
     "roll": true,
     "interval": 30
   },
   "items": [],
-  "disabled": true,
-  "reason": "exception:HTTPError"
+  "disabled": false,
+  "warn": "http_status:429",
+  "debug": {
+    "url": "https://rss.indeed.com/rss?q=software+engineer&l=Tokyo",
+    "content_type": "text/html; charset=UTF-8",
+    "body_head": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><st"
+  }
 }

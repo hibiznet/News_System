@@ -624,7 +624,7 @@ def update_jobs_jp():
 def jobs_jp_loop():
     while True:
         update_jobs_jp()
-        time.sleep(600)
+        time.sleep(3600)
 
 def build_indeed_rss_url(q: str, l: str) -> str:
     # Indeed RSS는 q/l 쿼리를 URL 인코딩해서 붙이면 됩니다.
@@ -693,6 +693,13 @@ def load_jobs_cfg_full():
 
     return cfg
 
+def _read_json(path, default):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return default
+
 def update_jobs_jp():
     cfg = load_jobs_cfg_full()
     preset_key = cfg.get("preset", DEFAULT_PRESET_KEY)
@@ -709,19 +716,51 @@ def update_jobs_jp():
 
     rss_url = build_indeed_rss_url(q, l)
 
-    try:
-        r = requests.get(rss_url, timeout=12, headers={"User-Agent": "Mozilla/5.0"})
-        r.raise_for_status()
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Accept": "application/rss+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,ko;q=0.8",
+    }
 
+    # 마지막 성공 데이터 읽기(실패 시 유지용)
+    last = _read_json(JOBS_JP_PATH, {"updated": "", "items": []})
+    last_items = last.get("items") if isinstance(last, dict) else []
+    if not isinstance(last_items, list):
+        last_items = []
+
+    try:
+        r = requests.get(rss_url, timeout=12, headers=headers)
+
+        # 429/403 등 차단 시: 기존 items 유지
+        if r.status_code != 200:
+            # 429면 특히 "그냥 유지"가 방송 안정
+            out = {
+                "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
+                "preset": preset_key,
+                "presetName": preset_name,
+                "ui": cfg["ui"],
+                "items": last_items,  # ✅ 유지
+                "disabled": False,    # ✅ 화면은 계속 보여주기
+                "warn": f"http_status:{r.status_code}",
+                "debug": {
+                    "url": rss_url,
+                    "content_type": r.headers.get("Content-Type", ""),
+                    "body_head": (r.text or "")[:120]
+                }
+            }
+            with open(JOBS_JP_PATH, "w", encoding="utf-8") as f:
+                json.dump(out, f, ensure_ascii=False, indent=2)
+            return
+
+        # 정상 RSS 파싱
         root = ET.fromstring(r.text)
         channel = root.find("channel")
         items = []
-
         if channel is not None:
-            for item in channel.findall("item")[:30]:  # 롤링을 위해 넉넉히 받아둠
+            for item in channel.findall("item")[:30]:
                 title = (item.findtext("title") or "").strip()
                 link = (item.findtext("link") or "").strip()
-                pub  = (item.findtext("pubDate") or "").strip()
+                pub = (item.findtext("pubDate") or "").strip()
                 if title:
                     items.append({"title": title, "link": link, "pubDate": pub})
 
@@ -729,24 +768,23 @@ def update_jobs_jp():
             "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
             "preset": preset_key,
             "presetName": preset_name,
-            "ui": cfg["ui"],                # ✅ UI 옵션을 overlay로 전달
+            "ui": cfg["ui"],
             "items": items
         }
-
         with open(JOBS_JP_PATH, "w", encoding="utf-8") as f:
             json.dump(out, f, ensure_ascii=False, indent=2)
 
-        print("[JOBS_JP UPDATED]", out["updated"], preset_key, "items:", len(items))
-
     except Exception as e:
+        # 예외도 동일하게 last 유지
         out = {
             "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
             "preset": preset_key,
             "presetName": preset_name,
             "ui": cfg["ui"],
-            "items": [],
-            "disabled": True,
-            "reason": f"exception:{type(e).__name__}"
+            "items": last_items,
+            "disabled": False,
+            "warn": f"exception:{type(e).__name__}",
+            "debug": {"url": rss_url}
         }
         with open(JOBS_JP_PATH, "w", encoding="utf-8") as f:
             json.dump(out, f, ensure_ascii=False, indent=2)
