@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>일본취업 구인 프리셋</title>
+  <style>
+    body{background:#0b0b0b;color:#fff;font-family:"Noto Sans KR",sans-serif;padding:22px}
+    h1{margin:0 0 12px}
+    .card{background:#111;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;margin:12px 0}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+    label{opacity:.85;font-weight:900}
+    select,input,button{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:#121212;color:#fff;font-weight:900}
+    input{min-width:260px}
+    button{cursor:pointer;border:none}
+    .primary{background:#1e7bff}
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,0.15)}
+    .hint{opacity:.7;font-size:12px;margin-top:6px}
+    #msg{margin-top:12px;opacity:.85}
+  </style>
+</head>
+<body>
+
+<h1>🇯🇵 일본취업 구인 (Indeed RSS)</h1>
+
+<div class="card">
+  <div class="row">
+    <label>프리셋</label>
+    <select id="preset" onchange="onPresetChange()"></select>
+    <button class="ghost" onclick="refresh()">새로고침</button>
+  </div>
+
+  <div class="row">
+    <label>커스텀 q</label>
+    <input id="q" placeholder="예: software engineer english" />
+  </div>
+  <div class="row">
+    <label>커스텀 l</label>
+    <input id="l" placeholder="예: Tokyo / Japan" />
+  </div>
+  <div class="hint">프리셋이 “커스텀”일 때만 q/l이 적용됩니다.</div>
+</div>
+
+<div class="card">
+  <div class="row">
+    <label>표시 개수</label>
+    <select id="count">
+      <option value="3">3개</option>
+      <option value="5">5개</option>
+      <option value="8">8개</option>
+      <option value="10">10개</option>
+    </select>
+
+    <label>자동 롤링</label>
+    <select id="roll">
+      <option value="true">ON</option>
+      <option value="false">OFF</option>
+    </select>
+
+    <label>롤링 간격</label>
+    <select id="interval">
+      <option value="5">5초</option>
+      <option value="10">10초</option>
+      <option value="15">15초</option>
+      <option value="20">20초</option>
+      <option value="30">30초</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <button class="primary" onclick="save()">저장 & 즉시 갱신</button>
+  </div>
+  <div id="msg">로딩중...</div>
+</div>
+
+<script>
+let currentCfg = null;
+
+function onPresetChange(){
+  const preset = document.getElementById("preset").value;
+  const q = document.getElementById("q");
+  const l = document.getElementById("l");
+  const enabled = (preset === "custom");
+  q.disabled = !enabled;
+  l.disabled = !enabled;
+}
+
+async function refresh(){
+  const res = await fetch("/api/jobsjp/presets");
+  const data = await res.json();
+
+  currentCfg = data.current;
+
+  const sel = document.getElementById("preset");
+  sel.innerHTML = "";
+  (data.presets || []).forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.key;
+    opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+
+  sel.value = currentCfg.preset || "custom";
+
+  document.getElementById("q").value = (currentCfg.custom?.q || "");
+  document.getElementById("l").value = (currentCfg.custom?.l || "");
+
+  document.getElementById("count").value = String(currentCfg.ui?.count ?? 6);
+  document.getElementById("roll").value = String(!!(currentCfg.ui?.roll ?? true));
+  document.getElementById("interval").value = String(currentCfg.ui?.interval ?? 10);
+
+  onPresetChange();
+  document.getElementById("msg").innerText = "✅ 로드 완료";
+}
+
+async function save(){
+  const preset = document.getElementById("preset").value;
+
+  const body = {
+    preset,
+    custom: {
+      q: document.getElementById("q").value.trim(),
+      l: document.getElementById("l").value.trim(),
+    },
+    ui: {
+      count: Number(document.getElementById("count").value),
+      roll: document.getElementById("roll").value === "true",
+      interval: Number(document.getElementById("interval").value),
+    }
+  };
+
+  await fetch("/api/jobsjp/config", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body)
+  });
+
+  document.getElementById("msg").innerText = "✅ 저장 완료 (오버레이 5초 내 반영)";
+}
+
+refresh();
+</script>
+
+</body>
+</html>

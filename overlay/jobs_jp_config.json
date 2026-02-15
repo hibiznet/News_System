@@ -1,0 +1,12 @@
+{
+  "preset": "jp_backend",
+  "custom": {
+    "q": "software engineer",
+    "l": "Japan"
+  },
+  "ui": {
+    "count": 10,
+    "roll": true,
+    "interval": 30
+  }
+}

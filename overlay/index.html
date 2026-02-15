@@ -103,6 +103,34 @@
 
   </div>
 
+  <!-- 🧩 드래그 가능한 추가 메뉴 패널 -->
+  <div id="floating-menu" class="floating-panel">
+    <div class="floating-handle">
+      <span class="floating-title">추가 메뉴</span>
+      <div class="floating-actions">
+        <button id="floating-lock" class="floating-btn" type="button">🔓</button>
+        <button id="floating-close" class="floating-btn" type="button">✖</button>
+      </div>
+    </div>
+
+    <div class="floating-body">
+      <!--
+      <div class="floating-item">✅ 광고/배너 전환</div>
+      <div class="floating-item">✅ 멀티뷰 레이아웃</div>
+      <div class="floating-item">✅ 긴급 송출</div>
+      -->
+      <!-- 원하는 HTML을 여기에 자유롭게 -->
+      <!-- 예: 링크/버튼/텍스트/이미지 등 -->
+      <div id="jobsjp-box">
+        <div class="section-title">🇯🇵 일본 취업 구인</div>
+        <div id="jobsjp-meta" style="opacity:.75;font-size:11px;margin:6px 0 8px;"></div>
+        <div id="jobsjp-list"></div>
+      </div>
+
+    </div>
+  </div>
+
+
   <audio id="alert-sound" src="disaster.wav" preload="auto"></audio>
 
   <!-- JS 로딩 순서: 메인 → 기능(날씨/주식/배너) → 테마(최종 덮어쓰기) -->

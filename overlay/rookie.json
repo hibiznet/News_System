@@ -1,5 +1,5 @@
 {
-  "updated": "2026-02-13 01:43",
+  "updated": "2026-02-16 03:42",
   "items": [
     {
       "rank": 1,
@@ -78,7 +78,7 @@
       "name": "윤콩♥",
       "bj_id": "0823kdh",
       "title": "",
-      "is_live": true,
+      "is_live": false,
       "move": "up",
       "delta": 137
     },
@@ -87,7 +87,7 @@
       "name": "rebirthztv",
       "bj_id": "rebirthztv",
       "title": "",
-      "is_live": true,
+      "is_live": false,
       "move": "up",
       "delta": 51
     }

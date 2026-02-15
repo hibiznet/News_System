@@ -195,6 +195,127 @@ function updateDateTime() {
 }
 
 /* ===============================
+   Floating Panel (draggable)
+================================ */
+(function floatingPanel() {
+  const panel = document.getElementById("floating-menu");
+  if (!panel) return;
+
+  const handle = panel.querySelector(".floating-handle");
+  const lockBtn = document.getElementById("floating-lock");
+  const closeBtn = document.getElementById("floating-close");
+
+  const KEY_POS = "overlay.floatingMenu.pos";
+  const KEY_LOCK = "overlay.floatingMenu.lock";
+  const KEY_HIDE = "overlay.floatingMenu.hide";
+
+  // 숨김 상태 복원
+  const hidden = localStorage.getItem(KEY_HIDE) === "1";
+  if (hidden) panel.style.display = "none";
+
+  // 위치 복원
+  try {
+    const saved = localStorage.getItem(KEY_POS);
+    if (saved) {
+      const { left, top } = JSON.parse(saved);
+      if (typeof left === "number" && typeof top === "number") {
+        panel.style.left = left + "px";
+        panel.style.top = top + "px";
+        panel.style.right = "auto";
+        panel.style.bottom = "auto";
+      }
+    }
+  } catch {}
+
+  // 잠금 상태
+  let locked = localStorage.getItem(KEY_LOCK) === "1";
+  function renderLock() {
+    if (lockBtn) lockBtn.textContent = locked ? "🔒" : "🔓";
+    if (handle) handle.style.pointerEvents = locked ? "none" : "auto";
+  }
+  renderLock();
+
+  if (lockBtn) {
+    lockBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      locked = !locked;
+      localStorage.setItem(KEY_LOCK, locked ? "1" : "0");
+      renderLock();
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      panel.style.display = "none";
+      localStorage.setItem(KEY_HIDE, "1");
+    });
+  }
+
+  // 드래그
+  if (!handle) return;
+
+  let startX = 0, startY = 0, startLeft = 0, startTop = 0, dragging = false;
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+  function onDown(e) {
+    if (locked) return;
+    dragging = true;
+
+    const rect = panel.getBoundingClientRect();
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeft = rect.left;
+    startTop = rect.top;
+
+    panel.style.left = rect.left + "px";
+    panel.style.top = rect.top + "px";
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
+
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+    handle.setPointerCapture?.(e.pointerId);
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    const w = panel.offsetWidth;
+    const h = panel.offsetHeight;
+
+    const maxLeft = window.innerWidth - w - 8;
+    const maxTop = window.innerHeight - h - 8;
+
+    const left = clamp(startLeft + dx, 8, maxLeft);
+    const top = clamp(startTop + dy, 8, maxTop);
+
+    panel.style.left = left + "px";
+    panel.style.top = top + "px";
+  }
+
+  function onUp() {
+    if (!dragging) return;
+    dragging = false;
+
+    const rect = panel.getBoundingClientRect();
+    try {
+      localStorage.setItem(KEY_POS, JSON.stringify({ left: rect.left, top: rect.top }));
+    } catch {}
+
+    document.removeEventListener("pointermove", onMove);
+    document.removeEventListener("pointerup", onUp);
+  }
+
+  handle.addEventListener("pointerdown", onDown);
+})();
+
+
+/* ===============================
    신입 스트리머 TOP10
 ================================ */
 function renderRookie(items) {
@@ -251,6 +372,133 @@ async function loadRookie() {
     box.style.display = "none";
   }
 }
+
+/* ===============================
+   Floating Menu show/hide from ui.json
+================================ */
+async function syncFloatingVisibility() {
+  const panel = document.getElementById("floating-menu");
+  if (!panel) return;
+
+  try {
+    const res = await fetch("/overlay/ui.json?t=" + Date.now(), { cache: "no-store" });
+    const ui = await res.json();
+    const hidden = !!ui?.floatingMenu?.hidden;
+
+    panel.style.display = hidden ? "none" : "";
+  } catch (e) {
+    // 실패 시 현상 유지
+  }
+}
+setInterval(syncFloatingVisibility, 2000);
+syncFloatingVisibility();
+/*
+async function loadJobsJP(){
+  const list = document.getElementById("jobsjp-list");
+  const box = document.getElementById("jobsjp-box");
+  if (!list || !box) return;
+
+  try{
+    const res = await fetch("/overlay/jobs_jp.json?t=" + Date.now(), {cache:"no-store"});
+    const data = await res.json();
+    const items = data.items || [];
+    if (!items.length) { box.style.display="none"; return; }
+    box.style.display="";
+
+    list.innerHTML = items.slice(0,6).map(it => `
+      <div class="floating-item">
+        <div style="font-weight:900; font-size:13px">${it.title}</div>
+        <div style="opacity:.75; font-size:11px">${it.pubDate || ""}</div>
+      </div>
+    `).join("");
+  }catch(e){
+    box.style.display="none";
+  }
+}
+setInterval(loadJobsJP, 10000);
+loadJobsJP();
+*/
+let jobsjpPage = 0;
+let jobsjpLastPreset = "";
+let jobsjpUi = { count: 6, roll: true, interval: 10 };
+let jobsjpTimer = null;
+
+function renderJobsJP(data) {
+  const box = document.getElementById("jobsjp-box");
+  const list = document.getElementById("jobsjp-list");
+  const meta = document.getElementById("jobsjp-meta");
+  if (!box || !list) return;
+
+  const items = data.items || [];
+  if (!items.length || data.disabled) { box.style.display = "none"; return; }
+  box.style.display = "";
+
+  if (meta) meta.textContent = `${data.presetName || ""} · 업데이트 ${data.updated || ""}`;
+
+  const count = jobsjpUi.count || 6;
+  const roll = !!jobsjpUi.roll;
+
+  const pageSize = count;
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  if (!roll) jobsjpPage = 0;
+  if (jobsjpPage >= totalPages) jobsjpPage = 0;
+
+  const start = jobsjpPage * pageSize;
+  const pageItems = items.slice(start, start + pageSize);
+
+  list.innerHTML = pageItems.map(it => `
+    <div class="floating-item" style="cursor:default;">
+      <div style="font-weight:900; font-size:13px; line-height:1.25">${String(it.title || "")}</div>
+      <div style="opacity:.75; font-size:11px; margin-top:4px">${String(it.pubDate || "")}</div>
+    </div>
+  `).join("");
+}
+
+function restartJobsJPTimer() {
+  if (jobsjpTimer) clearInterval(jobsjpTimer);
+  if (!jobsjpUi.roll) return;
+  const intervalMs = (jobsjpUi.interval || 10) * 1000;
+  jobsjpTimer = setInterval(() => {
+    jobsjpPage++;
+  }, intervalMs);
+}
+
+async function loadJobsJP() {
+  try {
+    const res = await fetch("/overlay/jobs_jp.json?t=" + Date.now(), { cache:"no-store" });
+    const data = await res.json();
+
+    // ui 옵션 반영
+    if (data.ui) {
+      jobsjpUi = {
+        count: Number(data.ui.count || 6),
+        roll: !!data.ui.roll,
+        interval: Number(data.ui.interval || 10)
+      };
+      jobsjpUi.count = Math.max(1, Math.min(10, jobsjpUi.count));
+      jobsjpUi.interval = Math.max(3, Math.min(60, jobsjpUi.interval));
+    }
+
+    // 프리셋 바뀌면 페이지 리셋
+    if ((data.preset || "") !== jobsjpLastPreset) {
+      jobsjpLastPreset = data.preset || "";
+      jobsjpPage = 0;
+      restartJobsJPTimer();
+    }
+
+    renderJobsJP(data);
+  } catch (e) {
+    const box = document.getElementById("jobsjp-box");
+    if (box) box.style.display = "none";
+  }
+}
+
+// 5초마다 JSON 갱신 확인
+setInterval(loadJobsJP, 5000);
+loadJobsJP();
+restartJobsJPTimer();
+
+
 
 setInterval(loadRookie, 5000);
 loadRookie();

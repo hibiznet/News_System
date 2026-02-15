@@ -1,0 +1,13 @@
+{
+  "updated": "2026-02-16 03:42",
+  "preset": "jp_backend",
+  "presetName": "🇯🇵 Backend Engineer",
+  "ui": {
+    "count": 10,
+    "roll": true,
+    "interval": 30
+  },
+  "items": [],
+  "disabled": true,
+  "reason": "exception:HTTPError"
+}

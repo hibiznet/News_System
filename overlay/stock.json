@@ -1,27 +1,27 @@
 {
-  "updated": "2026-02-13 01:43",
+  "updated": "2026-02-16 03:43",
   "domestic": {
     "KOSPI": {
-      "price": 5522.27,
-      "change": 3.13
+      "price": 5507.01,
+      "change": -0.28
     },
     "KOSDAQ": {
-      "price": 1125.99,
-      "change": 1.0
+      "price": 1106.08,
+      "change": -1.77
     }
   },
   "global": {
     "NASDAQ": {
-      "price": 22726.19,
-      "change": -1.48
+      "price": 22546.67,
+      "change": -0.22
     },
     "DOW": {
-      "price": 49619.56,
-      "change": -0.99
+      "price": 49500.93,
+      "change": 0.1
     },
     "S&P500": {
-      "price": 6872.99,
-      "change": -0.96
+      "price": 6836.17,
+      "change": 0.05
     }
   }
 }
