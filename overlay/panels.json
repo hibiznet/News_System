@@ -1,0 +1,24 @@
+{
+  "updated": "2026-02-16 22:18",
+  "resetToken": 1,
+  "panels": {
+    "jobsjp": {
+      "enabled": true,
+      "width": 360,
+      "opacity": 0.22,
+      "fontSize": 13
+    },
+    "jpwx": {
+      "enabled": true,
+      "width": 360,
+      "opacity": 0.22,
+      "fontSize": 13
+    },
+    "icn": {
+      "enabled": true,
+      "width": 360,
+      "opacity": 0.22,
+      "fontSize": 13
+    }
+  }
+}

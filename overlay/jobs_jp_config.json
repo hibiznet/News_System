@@ -1,11 +1,8 @@
 {
-  "preset": "jp_se_tokyo",
-  "custom": {
-    "q": "software engineer",
-    "l": "Japan"
-  },
+  "source": "tokyodev",
+  "preset": "td_all",
   "ui": {
-    "count": 10,
+    "count": 1,
     "roll": true,
     "interval": 30
   }

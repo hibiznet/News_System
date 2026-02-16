@@ -197,17 +197,26 @@ function updateDateTime() {
 /* ===============================
    Floating Panel (draggable)
 ================================ */
-(function floatingPanel() {
+function floatingPanel() {
   const panel = document.getElementById("floating-menu");
-  if (!panel) return;
+  if (!panel) {
+    console.warn("[floatingPanel] #floating-menu not found");
+    return;
+  }
 
   const handle = panel.querySelector(".floating-handle");
+  const actions = panel.querySelector(".floating-actions");
   const lockBtn = document.getElementById("floating-lock");
   const closeBtn = document.getElementById("floating-close");
 
   const KEY_POS = "overlay.floatingMenu.pos";
   const KEY_LOCK = "overlay.floatingMenu.lock";
   const KEY_HIDE = "overlay.floatingMenu.hide";
+
+  // ✅ 버튼 클릭이 절대 막히지 않게
+  if (actions) actions.style.pointerEvents = "auto";
+  if (lockBtn) lockBtn.style.pointerEvents = "auto";
+  if (closeBtn) closeBtn.style.pointerEvents = "auto";
 
   // 숨김 상태 복원
   const hidden = localStorage.getItem(KEY_HIDE) === "1";
@@ -231,24 +240,43 @@ function updateDateTime() {
   let locked = localStorage.getItem(KEY_LOCK) === "1";
   function renderLock() {
     if (lockBtn) lockBtn.textContent = locked ? "🔒" : "🔓";
-    if (handle) handle.style.pointerEvents = locked ? "none" : "auto";
+    panel.classList.toggle("is-locked", locked);
   }
   renderLock();
 
+  // ✅ 드래그/클릭 충돌 방지: 버튼은 pointerdown에서 stop
   if (lockBtn) {
+    lockBtn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
+
     lockBtn.addEventListener("click", (e) => {
+      e.preventDefault();
       e.stopPropagation();
       locked = !locked;
       localStorage.setItem(KEY_LOCK, locked ? "1" : "0");
       renderLock();
+      console.log("[floatingPanel] lock =", locked);
     });
   }
 
   if (closeBtn) {
-    closeBtn.addEventListener("click", (e) => {
+    // ✅ click이 안 올라오는 케이스 대비: pointerdown에서 즉시 닫기
+    closeBtn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
       e.stopPropagation();
       panel.style.display = "none";
       localStorage.setItem(KEY_HIDE, "1");
+      console.log("[floatingPanel] close (pointerdown)");
+    }, true);
+
+    closeBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      panel.style.display = "none";
+      localStorage.setItem(KEY_HIDE, "1");
+      console.log("[floatingPanel] close (click)");
     });
   }
 
@@ -256,11 +284,13 @@ function updateDateTime() {
   if (!handle) return;
 
   let startX = 0, startY = 0, startLeft = 0, startTop = 0, dragging = false;
-
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
   function onDown(e) {
+    // ✅ 버튼 영역은 드래그 시작 금지
+    if (e.target.closest && e.target.closest(".floating-actions")) return;
     if (locked) return;
+
     dragging = true;
 
     const rect = panel.getBoundingClientRect();
@@ -312,7 +342,121 @@ function updateDateTime() {
   }
 
   handle.addEventListener("pointerdown", onDown);
-})();
+
+  console.log("[floatingPanel] init OK");
+}
+
+// ✅ 무조건 실행(다른 코드 에러와 분리하고 싶으면 try/catch 권장)
+try { floatingPanel(); } catch (e) { console.error("[floatingPanel] failed", e); }
+
+function setupDraggablePanel(panelId){
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+
+  const handle = panel.querySelector(".floating-handle");
+  const lockBtn = panel.querySelector('[data-action="lock"]');
+  const closeBtn = panel.querySelector('[data-action="close"]');
+
+  const KEY_POS  = `overlay.panel.${panelId}.pos`;
+  const KEY_LOCK = `overlay.panel.${panelId}.lock`;
+  const KEY_HIDE = `overlay.panel.${panelId}.hide`;
+
+  // 숨김 복원
+  if (localStorage.getItem(KEY_HIDE) === "1") panel.style.display = "none";
+
+  // 위치 복원
+  try{
+    const saved = localStorage.getItem(KEY_POS);
+    if (saved){
+      const {left, top} = JSON.parse(saved);
+      if (typeof left === "number" && typeof top === "number"){
+        panel.style.left = left + "px";
+        panel.style.top  = top + "px";
+        panel.style.right = "auto";
+        panel.style.bottom = "auto";
+      }
+    }
+  }catch{}
+
+  let locked = localStorage.getItem(KEY_LOCK) === "1";
+  const render = () => { if (lockBtn) lockBtn.textContent = locked ? "🔒" : "🔓"; };
+  render();
+
+  if (lockBtn){
+    lockBtn.addEventListener("pointerdown", e=>{e.preventDefault(); e.stopPropagation();}, true);
+    lockBtn.addEventListener("click", e=>{
+      e.preventDefault(); e.stopPropagation();
+      locked = !locked;
+      localStorage.setItem(KEY_LOCK, locked ? "1":"0");
+      render();
+    });
+  }
+
+  if (closeBtn){
+    closeBtn.addEventListener("pointerdown", e=>{
+      e.preventDefault(); e.stopPropagation();
+      panel.style.display = "none";
+      localStorage.setItem(KEY_HIDE, "1");
+    }, true);
+  }
+
+  if (!handle) return;
+  let startX=0,startY=0,startLeft=0,startTop=0,dragging=false;
+  const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+
+  function onDown(e){
+    if (e.target.closest && e.target.closest(".floating-actions")) return;
+    if (locked) return;
+    dragging = true;
+    const rect = panel.getBoundingClientRect();
+    startX = e.clientX; startY = e.clientY;
+    startLeft = rect.left; startTop = rect.top;
+
+    panel.style.left = rect.left + "px";
+    panel.style.top  = rect.top + "px";
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
+
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerup", onUp);
+    handle.setPointerCapture?.(e.pointerId);
+  }
+
+  function onMove(e){
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    const w = panel.offsetWidth;
+    const h = panel.offsetHeight;
+
+    const maxLeft = window.innerWidth - w - 8;
+    const maxTop  = window.innerHeight - h - 8;
+
+    panel.style.left = clamp(startLeft + dx, 8, maxLeft) + "px";
+    panel.style.top  = clamp(startTop + dy, 8, maxTop) + "px";
+  }
+
+  function onUp(){
+    if (!dragging) return;
+    dragging = false;
+
+    const rect = panel.getBoundingClientRect();
+    try{ localStorage.setItem(KEY_POS, JSON.stringify({left: rect.left, top: rect.top})); }catch{}
+
+    document.removeEventListener("pointermove", onMove);
+    document.removeEventListener("pointerup", onUp);
+  }
+
+  handle.addEventListener("pointerdown", onDown);
+}
+
+// ✅ 등록만 하면 패널 수 늘려도 OK
+document.addEventListener("DOMContentLoaded", () => {
+  setupDraggablePanel("panel-jobsjp");
+  setupDraggablePanel("panel-jpwx");
+  setupDraggablePanel("panel-icn");
+});
 
 
 /* ===============================
@@ -420,47 +564,68 @@ loadJobsJP();
 */
 let jobsjpPage = 0;
 let jobsjpLastPreset = "";
-let jobsjpUi = { count: 6, roll: true, interval: 10 };
+let jobsjpUi = { count: 6, roll: true, interval: 30 };
 let jobsjpTimer = null;
+
+function jpBadge(jpRequired){
+  if (jpRequired === "required") return `<span class="badge no">일본어 필수</span>`;
+  if (jpRequired === "preferred") return `<span class="badge warn">일본어 우대</span>`;
+  if (jpRequired === "not_required") return `<span class="badge ok">일본어 불필요</span>`;
+  return ``;
+}
 
 function renderJobsJP(data) {
   const box = document.getElementById("jobsjp-box");
   const list = document.getElementById("jobsjp-list");
   const meta = document.getElementById("jobsjp-meta");
-  if (!box || !list) return;
+  const sourceEl = document.getElementById("jobsjp-source");
 
   const items = data.items || [];
-  if (!items.length || data.disabled) { box.style.display = "none"; return; }
+  if (!items.length) { box.style.display = "none"; return; }
   box.style.display = "";
 
-  if (meta) meta.textContent = `${data.presetName || ""} · 업데이트 ${data.updated || ""}`;
+  // ✅ 사이트명 크게
+  sourceEl.textContent = data.sourceName || "JP 일본 취업 구인";
+  meta.textContent = `업데이트 ${data.updated || ""}`;
 
-  const count = jobsjpUi.count || 6;
-  const roll = !!jobsjpUi.roll;
+  const pageItems = items.slice(0, (data.ui?.count || 6));
 
-  const pageSize = count;
-  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
-  if (!roll) jobsjpPage = 0;
-  if (jobsjpPage >= totalPages) jobsjpPage = 0;
+  list.innerHTML = pageItems.map(it => {
+    const title = escapeHtml(it.title || "");
+    const company = escapeHtml(it.company || "회사명 정보없음");
+    const salary = escapeHtml(it.salary || "");
+    const location = escapeHtml(it.location || "");
+    const tags = Array.isArray(it.tags) ? it.tags.slice(0,6) : [];
 
-  const start = jobsjpPage * pageSize;
-  const pageItems = items.slice(start, start + pageSize);
+    return `
+      <div class="job-card">
+        <div class="job-title">${title}</div>
+        <div class="job-row">
+          <span class="job-company">${company}</span>
+          ${location ? `<span class="badge">${location}</span>` : ``}
+          ${salary ? `<span class="badge">${salary}</span>` : ``}
+          ${jpBadge(it.jpRequired)}
+        </div>
+        ${tags.length ? `<div class="tags">${tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>` : ``}
+      </div>
+    `;
+  }).join("");
+}
 
-  list.innerHTML = pageItems.map(it => `
-    <div class="floating-item" style="cursor:default;">
-      <div style="font-weight:900; font-size:13px; line-height:1.25">${String(it.title || "")}</div>
-      <div style="opacity:.75; font-size:11px; margin-top:4px">${String(it.pubDate || "")}</div>
-    </div>
-  `).join("");
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
 function restartJobsJPTimer() {
   if (jobsjpTimer) clearInterval(jobsjpTimer);
   if (!jobsjpUi.roll) return;
-  const intervalMs = (jobsjpUi.interval || 10) * 1000;
-  jobsjpTimer = setInterval(() => {
-    jobsjpPage++;
-  }, intervalMs);
+  const intervalMs = (jobsjpUi.interval || 30) * 1000;
+  jobsjpTimer = setInterval(() => { jobsjpPage++; }, intervalMs);
 }
 
 async function loadJobsJP() {
@@ -468,18 +633,16 @@ async function loadJobsJP() {
     const res = await fetch("/overlay/jobs_jp.json?t=" + Date.now(), { cache:"no-store" });
     const data = await res.json();
 
-    // ui 옵션 반영
     if (data.ui) {
       jobsjpUi = {
         count: Number(data.ui.count || 6),
         roll: !!data.ui.roll,
-        interval: Number(data.ui.interval || 10)
+        interval: Number(data.ui.interval || 30)
       };
       jobsjpUi.count = Math.max(1, Math.min(10, jobsjpUi.count));
-      jobsjpUi.interval = Math.max(3, Math.min(60, jobsjpUi.interval));
+      jobsjpUi.interval = Math.max(5, Math.min(300, jobsjpUi.interval));
     }
 
-    // 프리셋 바뀌면 페이지 리셋
     if ((data.preset || "") !== jobsjpLastPreset) {
       jobsjpLastPreset = data.preset || "";
       jobsjpPage = 0;
@@ -493,11 +656,145 @@ async function loadJobsJP() {
   }
 }
 
-// 5초마다 JSON 갱신 확인
+async function loadJPWX() {
+  try {
+    const res = await fetch("/overlay/jp_weather.json?t=" + Date.now(), {cache:"no-store"});
+    const data = await res.json();
+
+    const box = document.getElementById("jpwx-box");
+    const list = document.getElementById("jpwx-list");
+    const meta = document.getElementById("jpwx-meta");
+    const source = document.getElementById("jpwx-source");
+
+    const items = data.items || [];
+    if (!items.length) { box.style.display="none"; return; }
+    box.style.display="";
+
+    source.textContent = data.sourceName || "JP Weather";
+    meta.textContent = `업데이트 ${data.updated || ""}`;
+
+    list.innerHTML = items.map(it => {
+      if (it.error) {
+        return `<div class="job-card"><div class="job-title">${it.city} 날씨 오류</div><div class="job-row"><span class="badge warn">${it.error}</span></div></div>`;
+      }
+      const now = it.now || {};
+      const t = it.today || {};
+      const tm = it.tomorrow || {};
+      return `
+        <div class="job-card">
+          <div class="job-title">${it.city}</div>
+          <div class="job-row">
+            <span class="badge">${now.icon || "🌡️"} 현재 ${now.temp ?? "--"}°</span>
+            <span class="badge">${t.icon || "☀️"} 오늘 ${t.min ?? "--"}° / ${t.max ?? "--"}°</span>
+            <span class="badge">${tm.icon || "🌤️"} 내일 ${tm.min ?? "--"}° / ${tm.max ?? "--"}°</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+  } catch(e) {
+    const box = document.getElementById("jpwx-box");
+    if (box) box.style.display="none";
+  }
+}
+setInterval(loadJPWX, 30000);
+loadJPWX();
+
+async function loadICN() {
+  try {
+    const res = await fetch("/overlay/icn_terminal_view.json?t=" + Date.now(), {cache:"no-store"});
+    const data = await res.json();
+
+    const box = document.getElementById("icn-box");
+    const list = document.getElementById("icn-list");
+    const meta = document.getElementById("icn-meta");
+    const source = document.getElementById("icn-source");
+
+    const items = data.items || [];
+    if (!items.length) { box.style.display="none"; return; }
+    box.style.display="";
+
+    source.textContent = data.sourceName || "ICN Terminal";
+    meta.textContent = `업데이트 ${data.updated || ""} · 검색 "${data.ui?.query || ""}"`;
+
+    list.innerHTML = items.map(it => {
+      const term = (it.terminal || "").toUpperCase();
+      const cls = term === "T2" ? "t2" : "t1";
+      return `
+        <div class="job-card">
+          <div class="job-title">${it.airline} <span style="opacity:.7;font-weight:700">(${it.iata || ""}/${it.icao || ""})</span></div>
+          <div class="job-row">
+            <span class="badge ${cls}">${term || "T?"}</span>
+            <span class="badge">탑승 터미널</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+  } catch(e) {
+    const box = document.getElementById("icn-box");
+    if (box) box.style.display="none";
+  }
+}
+setInterval(loadICN, 5000);
+loadICN();
+
+// 파넬 설정 불러와서 적용 (관리자 페이지에서 저장하면 즉시 반영됨)
+let lastResetToken = 0;
+
+async function loadPanelSettings() {
+  try {
+    const res = await fetch("/overlay/panels.json?t=" + Date.now(), { cache: "no-store" });
+    const cfg = await res.json();
+
+    // ✅ resetToken 바뀌면 숨김 키 제거 후 다시 표시
+    const token = Number(cfg.resetToken || 0);
+    if (token && token !== lastResetToken) {
+      lastResetToken = token;
+
+      // 우리가 쓰는 hide 키들 삭제
+      localStorage.removeItem("overlay.panel.panel-jobsjp.hide");
+      localStorage.removeItem("overlay.panel.panel-jpwx.hide");
+      localStorage.removeItem("overlay.panel.panel-icn.hide");
+
+      // 표시
+      ["panel-jobsjp","panel-jpwx","panel-icn"].forEach(id=>{
+        const el = document.getElementById(id);
+        if (el) el.style.display = "";
+      });
+    }
+
+    applyPanel("panel-jobsjp", cfg.panels?.jobsjp);
+    applyPanel("panel-jpwx",   cfg.panels?.jpwx);
+    applyPanel("panel-icn",    cfg.panels?.icn);
+  } catch (e) {}
+}
+
+function applyPanel(panelId, p) {
+  const el = document.getElementById(panelId);
+  if (!el || !p) return;
+
+  // ON/OFF
+  el.style.display = p.enabled ? "" : "none";
+
+  // 스타일 적용
+  if (p.width) el.style.width = p.width + "px";
+  if (p.opacity != null) el.style.background = `rgba(0,0,0,${p.opacity})`;
+  if (p.fontSize) el.style.fontSize = p.fontSize + "px";
+
+  // 내부 글자도 같이(조금 더 확실)
+  el.querySelectorAll(".job-title,.jobs-source,.jobs-sub,.badge,.tag,.floating-title")
+    .forEach(n => { n.style.fontSize = ""; }); // 기본은 패널 font-size 상속
+}
+
+// 5초마다 설정 반영 (관리자에서 저장하면 즉시 반영됨)
+setInterval(loadPanelSettings, 5000);
+loadPanelSettings();
+
+
 setInterval(loadJobsJP, 5000);
 loadJobsJP();
 restartJobsJPTimer();
-
 
 
 setInterval(loadRookie, 5000);
@@ -517,3 +814,5 @@ loadNews();
 
 setInterval(loadBreaking, 3000);
 setInterval(loadNews, 60000);
+
+document.addEventListener("DOMContentLoaded", floatingPanel);

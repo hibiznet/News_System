@@ -567,58 +567,56 @@ body {
 /* =========================================================
    Floating draggable panel (left of right widgets)
 ========================================================= */
-.floating-panel {
-  position: fixed;
-  top: 90px;
-  right: 360px;               /* ✅ 오른쪽 패널보다 왼쪽에 보이게 */
-  width: 260px;
-  z-index: 90;
-  background: rgba(0,0,0,0.55);
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 14px;
+.floating-panel{
+  position: absolute;
+  z-index: 999999;
+  width: 360px;
+  right: 20px;
+  top: 120px;
+  background: rgba(0,0,0,0.20);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
   overflow: hidden;
-  backdrop-filter: blur(6px);
 }
 
-.floating-handle {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+.floating-handle{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
   padding: 10px 12px;
-  background: rgba(255,255,255,0.06);
+  background: rgba(0,0,0,0.25);
   border-bottom: 1px solid rgba(255,255,255,0.10);
-  user-select: none;
-  cursor: grab;
+  cursor: move;
 }
 
-.floating-handle:active { cursor: grabbing; }
-
-.floating-title {
+.floating-title{
   font-weight: 900;
   font-size: 13px;
-  letter-spacing: -0.2px;
+  opacity: .95;
 }
 
-.floating-actions {
-  display: flex;
-  gap: 6px;
+.floating-actions{
+  display:flex;
+  gap:8px;
+  pointer-events:auto !important;
 }
 
-.floating-btn {
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(0,0,0,0.25);
+.floating-btn{
+  border: none;
+  background: rgba(255,255,255,0.08);
   color: #fff;
   border-radius: 10px;
-  padding: 4px 8px;
+  padding: 6px 8px;
   cursor: pointer;
-  font-weight: 900;
-  font-size: 12px;
+  pointer-events:auto !important;
 }
 
-.floating-body {
-  padding: 10px 12px 12px;
-}
+.floating-body{ padding: 10px 12px; }
+
+#panel-jobsjp{ top: 120px; right: 20px; }
+#panel-jpwx  { top: 420px; right: 20px; }
+#panel-icn   { top: 680px; right: 20px; }
 
 .floating-item {
   padding: 8px 10px;
@@ -640,3 +638,204 @@ body {
   background: rgba(255,255,255,0.18);
   border-radius: 999px;
 }
+/* ===== Floating Menu Header: "추가메뉴" 숨김 ===== */
+/* 기존에 floating-menu 헤더에 제목 텍스트가 있다면 숨김 */
+#floating-menu .title,
+#floating-menu .panel-title,
+#floating-menu .header-title {
+  display: none !important;
+}
+
+/* ===== Jobs Panel UI ===== */
+.jobs-panel{
+  margin-top:10px;
+}
+
+.jobs-head{
+  margin-bottom:10px;
+}
+
+.jobs-source{
+  font-weight: 900;
+  font-size: 16px; /* 사이트명 크게 */
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+.jobs-sub{
+  margin-top:4px;
+  font-size: 11px;
+  opacity: .75;
+}
+
+.jobs-list{
+  display:flex;
+  flex-direction: column;
+  gap:10px;
+}
+
+.job-card{
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  padding: 10px 12px;
+  backdrop-filter: blur(6px);
+}
+
+.job-title{
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1.25;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.job-row{
+  display:flex;
+  gap:10px;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 11px;
+  opacity: .9;
+}
+
+.job-company{
+  font-weight: 900;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.18);
+  font-size: 11px;
+  opacity: .95;
+}
+
+.badge.ok{ border-color: rgba(64, 220, 140, 0.35); }
+.badge.warn{ border-color: rgba(255, 200, 60, 0.35); }
+.badge.no{ border-color: rgba(255, 90, 90, 0.35); }
+
+.tags{
+  margin-top:8px;
+  display:flex;
+  gap:6px;
+  flex-wrap: wrap;
+}
+.tag{
+  padding:2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  opacity: .85;
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+/* "추가메뉴" 같은 타이틀 텍스트 숨김(구조에 따라 클래스가 다를 수 있어 넓게 처리) */
+#floating-menu .title,
+#floating-menu .panel-title,
+#floating-menu .header-title{
+  display:none !important;
+}
+
+.jobs-source{
+  font-weight:900;
+  font-size:16px;
+  line-height:1.2;
+}
+.jobs-sub{
+  margin-top:4px;
+  font-size:11px;
+  opacity:.75;
+}
+.jobs-list{
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.job-card{
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+  padding: 10px 12px;
+  backdrop-filter: blur(6px);
+}
+
+.job-title{
+  font-weight:900;
+  font-size:13px;
+  line-height:1.25;
+  margin-bottom:6px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.job-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+  font-size:11px;
+  opacity:.9;
+}
+.job-company{ font-weight:900; }
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  padding:3px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.18);
+  font-size:11px;
+  opacity:.95;
+}
+.badge.ok{ border-color: rgba(64,220,140,0.35); }
+.badge.warn{ border-color: rgba(255,200,60,0.35); }
+.badge.no{ border-color: rgba(255,90,90,0.35); }
+
+.tags{
+  margin-top:8px;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.tag{
+  padding:2px 8px;
+  border-radius:999px;
+  font-size:10px;
+  opacity:.85;
+  border:1px solid rgba(255,255,255,0.10);
+}
+#floating-menu { position: absolute; z-index: 9999; }
+#floating-menu .fm-header { position: relative; z-index: 10000; }
+#floating-menu .fm-btn { pointer-events: auto; cursor: pointer; }
+#floating-menu.is-locked .floating-handle{
+  opacity: 0.9;
+}
+#floating-menu.is-locked .floating-title::after{
+  content: " (잠금)";
+  opacity: 0.6;
+  font-size: 12px;
+  margin-left: 6px;
+}
+/* floating 패널이 다른 레이어 밑으로 들어가 클릭이 안 되는 문제 방지 */
+#floating-menu { position: absolute; z-index: 999999; }
+
+/* 헤더/버튼이 항상 클릭 가능 */
+#floating-menu .floating-handle { position: relative; z-index: 1000000; }
+#floating-menu .floating-actions { position: relative; z-index: 1000001; pointer-events: auto !important; }
+#floating-menu .floating-btn { pointer-events: auto !important; cursor: pointer; }
+
+.badge.t1 { border-color: rgba(90,180,255,0.45); }
+.badge.t2 { border-color: rgba(255,120,180,0.45); }
+

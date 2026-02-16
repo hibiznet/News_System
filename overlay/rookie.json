@@ -1,5 +1,5 @@
 {
-  "updated": "2026-02-16 04:12",
+  "updated": "2026-02-16 22:27",
   "items": [
     {
       "rank": 1,
@@ -7,11 +7,20 @@
       "bj_id": "9hari8",
       "title": "",
       "is_live": false,
+      "move": "same",
+      "delta": null
+    },
+    {
+      "rank": 2,
+      "name": "fifatargrean",
+      "bj_id": "fifatargrean",
+      "title": "",
+      "is_live": false,
       "move": "up",
       "delta": 1
     },
     {
-      "rank": 2,
+      "rank": 3,
       "name": "♡비니♡",
       "bj_id": "bean1214",
       "title": "",
@@ -20,76 +29,67 @@
       "delta": 1
     },
     {
-      "rank": 3,
-      "name": "fifatargrean",
-      "bj_id": "fifatargrean",
-      "title": "",
-      "is_live": true,
-      "move": "up",
-      "delta": 1
-    },
-    {
       "rank": 4,
-      "name": "미진이",
-      "bj_id": "kjhanna824",
+      "name": "비밀소녀♥",
+      "bj_id": "secretto486",
       "title": "",
       "is_live": false,
       "move": "up",
-      "delta": 22
+      "delta": 11
     },
     {
       "rank": 5,
-      "name": "DK쇼메쇼메",
-      "bj_id": "showmakerr",
-      "title": "",
-      "is_live": false,
-      "move": "same",
-      "delta": null
-    },
-    {
-      "rank": 6,
-      "name": "DK스매쉬",
-      "bj_id": "tlsrmawo",
-      "title": "",
-      "is_live": false,
-      "move": "up",
-      "delta": 13
-    },
-    {
-      "rank": 7,
       "name": "지한이또",
       "bj_id": "jihan110",
       "title": "",
       "is_live": false,
       "move": "up",
-      "delta": 28
+      "delta": 2
+    },
+    {
+      "rank": 6,
+      "name": "미진이",
+      "bj_id": "kjhanna824",
+      "title": "",
+      "is_live": false,
+      "move": "down",
+      "delta": 2
+    },
+    {
+      "rank": 7,
+      "name": "옥수수♡",
+      "bj_id": "dustntn53",
+      "title": "",
+      "is_live": false,
+      "move": "up",
+      "delta": 43
     },
     {
       "rank": 8,
-      "name": "김군",
-      "bj_id": "dkcjfhrm",
-      "title": "롤붕이^^",
+      "name": "슈링+*♡",
+      "bj_id": "gebarbie0410",
+      "title": "",
       "is_live": false,
-      "move": "down",
-      "delta": 5
+      "move": "up",
+      "delta": 55
     },
     {
       "rank": 9,
-      "name": "윤콩♥",
-      "bj_id": "0823kdh",
+      "name": "DK스매쉬",
+      "bj_id": "tlsrmawo",
       "title": "",
       "is_live": false,
-      "move": "up",
-      "delta": 137
+      "move": "down",
+      "delta": 3
     },
     {
       "rank": 10,
-      "name": "rebirthztv",
-      "bj_id": "rebirthztv",
+      "name": "김세노",
+      "bj_id": "os3n0o",
       "title": "",
       "is_live": false,
       "move": "up",
-      "delta": 51
+      "delta": 11
     }
   ]
 }

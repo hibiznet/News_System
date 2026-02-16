@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SOOP 뉴스 오버레이</title>
+  <title>SOOP 방송용 정보 대쉬보드</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -104,29 +104,63 @@
   </div>
 
   <!-- 🧩 드래그 가능한 추가 메뉴 패널 -->
-  <div id="floating-menu" class="floating-panel">
+  <!-- 1) 일본취업 패널 -->
+  <div id="panel-jobsjp" class="floating-panel">
     <div class="floating-handle">
-      <span class="floating-title">추가 메뉴</span>
+      <span class="floating-title">🇯🇵 일본 취업</span>
       <div class="floating-actions">
-        <button id="floating-lock" class="floating-btn" type="button">🔓</button>
-        <button id="floating-close" class="floating-btn" type="button">✖</button>
+        <button data-panel="panel-jobsjp" data-action="lock" class="floating-btn" type="button">🔓</button>
+        <button data-panel="panel-jobsjp" data-action="close" class="floating-btn" type="button">✖</button>
       </div>
     </div>
-
     <div class="floating-body">
-      <!--
-      <div class="floating-item">✅ 광고/배너 전환</div>
-      <div class="floating-item">✅ 멀티뷰 레이아웃</div>
-      <div class="floating-item">✅ 긴급 송출</div>
-      -->
-      <!-- 원하는 HTML을 여기에 자유롭게 -->
-      <!-- 예: 링크/버튼/텍스트/이미지 등 -->
-      <div id="jobsjp-box">
-        <div class="section-title">🇯🇵 일본 취업 구인</div>
-        <div id="jobsjp-meta" style="opacity:.75;font-size:11px;margin:6px 0 8px;"></div>
-        <div id="jobsjp-list"></div>
+      <div id="jobsjp-box" class="jobs-panel">
+        <div class="jobs-head">
+          <div class="jobs-source" id="jobsjp-source"></div>
+          <div class="jobs-sub" id="jobsjp-meta"></div>
+        </div>
+        <div id="jobsjp-list" class="jobs-list"></div>
       </div>
+    </div>
+  </div>
 
+  <!-- 2) 일본 날씨 패널 -->
+  <div id="panel-jpwx" class="floating-panel">
+    <div class="floating-handle">
+      <span class="floating-title">🇯🇵 일본 날씨</span>
+      <div class="floating-actions">
+        <button data-panel="panel-jpwx" data-action="lock" class="floating-btn" type="button">🔓</button>
+        <button data-panel="panel-jpwx" data-action="close" class="floating-btn" type="button">✖</button>
+      </div>
+    </div>
+    <div class="floating-body">
+      <div id="jpwx-box" class="jobs-panel">
+        <div class="jobs-head">
+          <div class="jobs-source" id="jpwx-source"></div>
+          <div class="jobs-sub" id="jpwx-meta"></div>
+        </div>
+        <div id="jpwx-list" class="jobs-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3) 인천공항 터미널 패널 -->
+  <div id="panel-icn" class="floating-panel">
+    <div class="floating-handle">
+      <span class="floating-title">✈️ ICN 터미널</span>
+      <div class="floating-actions">
+        <button data-panel="panel-icn" data-action="lock" class="floating-btn" type="button">🔓</button>
+        <button data-panel="panel-icn" data-action="close" class="floating-btn" type="button">✖</button>
+      </div>
+    </div>
+    <div class="floating-body">
+      <div id="icn-box" class="jobs-panel">
+        <div class="jobs-head">
+          <div class="jobs-source" id="icn-source"></div>
+          <div class="jobs-sub" id="icn-meta"></div>
+        </div>
+        <div id="icn-list" class="jobs-list"></div>
+      </div>
     </div>
   </div>
 
