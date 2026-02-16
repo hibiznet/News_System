@@ -1,5 +1,5 @@
 {
-  "updated": "2026-02-16 22:27",
+  "updated": "2026-02-17 00:42",
   "items": [
     {
       "rank": 1,
@@ -69,7 +69,7 @@
       "name": "슈링+*♡",
       "bj_id": "gebarbie0410",
       "title": "",
-      "is_live": false,
+      "is_live": true,
       "move": "up",
       "delta": 55
     },

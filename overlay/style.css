@@ -567,13 +567,15 @@ body {
 /* =========================================================
    Floating draggable panel (left of right widgets)
 ========================================================= */
+/* 패널 공통 (right 고정 제거) */
 .floating-panel{
   position: absolute;
   z-index: 999999;
   width: 360px;
-  right: 20px;
+  left: 20px;
   top: 120px;
-  background: rgba(0,0,0,0.20);
+
+  background: rgba(0,0,0,0.22);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 16px;
   backdrop-filter: blur(8px);
@@ -614,9 +616,9 @@ body {
 
 .floating-body{ padding: 10px 12px; }
 
-#panel-jobsjp{ top: 120px; right: 20px; }
-#panel-jpwx  { top: 420px; right: 20px; }
-#panel-icn   { top: 680px; right: 20px; }
+#panel-icn   { top: 120px; left: 20px; }
+#panel-jpwx  { top: 120px; left: 400px; }  /* 20 + 360 + 20 */
+#panel-jobsjp{ top: 120px; left: 780px; }  /* 400 + 360 + 20 */
 
 .floating-item {
   padding: 8px 10px;

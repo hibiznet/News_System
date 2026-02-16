@@ -752,16 +752,21 @@ async function loadPanelSettings() {
     if (token && token !== lastResetToken) {
       lastResetToken = token;
 
-      // 우리가 쓰는 hide 키들 삭제
-      localStorage.removeItem("overlay.panel.panel-jobsjp.hide");
-      localStorage.removeItem("overlay.panel.panel-jpwx.hide");
-      localStorage.removeItem("overlay.panel.panel-icn.hide");
+    // 숨김 제거
+    localStorage.removeItem("overlay.panel.panel-icn.hide");
+    localStorage.removeItem("overlay.panel.panel-jpwx.hide");
+    localStorage.removeItem("overlay.panel.panel-jobsjp.hide");
 
-      // 표시
-      ["panel-jobsjp","panel-jpwx","panel-icn"].forEach(id=>{
-        const el = document.getElementById(id);
-        if (el) el.style.display = "";
-      });
+    // ✅ 위치 초기화(기본배치로 돌아가게)
+    localStorage.removeItem("overlay.panel.panel-icn.pos");
+    localStorage.removeItem("overlay.panel.panel-jpwx.pos");
+    localStorage.removeItem("overlay.panel.panel-jobsjp.pos");
+
+    // 표시
+    ["panel-icn","panel-jpwx","panel-jobsjp"].forEach(id=>{
+      const el = document.getElementById(id);
+      if (el) el.style.display = "";
+    });
     }
 
     applyPanel("panel-jobsjp", cfg.panels?.jobsjp);

@@ -4,6 +4,6 @@
   "ui": {
     "count": 1,
     "roll": true,
-    "interval": 30
+    "interval": 120
   }
 }

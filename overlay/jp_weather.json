@@ -1,5 +1,5 @@
 {
-  "updated": "2026-02-16 22:22",
+  "updated": "2026-02-17 00:22",
   "sourceName": "Open-Meteo (JP Weather)",
   "ui": {
     "interval": 30
@@ -9,66 +9,66 @@
       "cityKey": "tokyo",
       "city": "도쿄",
       "now": {
-        "temp": 6.1,
+        "temp": 5.1,
         "desc": "흐림",
         "icon": "☁️"
       },
       "today": {
-        "min": 5.8,
-        "max": 13.7,
-        "code": 3,
-        "desc": "흐림",
-        "icon": "☁️"
-      },
-      "tomorrow": {
         "min": 2.8,
         "max": 6.4,
-        "code": 3,
-        "desc": "흐림",
-        "icon": "☁️"
-      }
-    },
-    {
-      "cityKey": "osaka",
-      "city": "오사카",
-      "now": {
-        "temp": 4.2,
-        "desc": "대체로 맑음",
-        "icon": "🌤️"
-      },
-      "today": {
-        "min": 3.9,
-        "max": 11.2,
         "code": 3,
         "desc": "흐림",
         "icon": "☁️"
       },
       "tomorrow": {
         "min": 1.3,
-        "max": 9.0,
+        "max": 10.7,
         "code": 2,
         "desc": "구름조금",
         "icon": "⛅"
       }
     },
     {
-      "cityKey": "fukuoka",
-      "city": "후쿠오카",
+      "cityKey": "osaka",
+      "city": "오사카",
       "now": {
-        "temp": 9.1,
+        "temp": 3.5,
+        "desc": "대체로 맑음",
+        "icon": "🌤️"
+      },
+      "today": {
+        "min": 1.3,
+        "max": 9.0,
+        "code": 2,
         "desc": "구름조금",
         "icon": "⛅"
       },
-      "today": {
-        "min": 7.4,
-        "max": 12.7,
-        "code": 3,
-        "desc": "흐림",
-        "icon": "☁️"
-      },
       "tomorrow": {
+        "min": 0.1,
+        "max": 9.4,
+        "code": 1,
+        "desc": "대체로 맑음",
+        "icon": "🌤️"
+      }
+    },
+    {
+      "cityKey": "fukuoka",
+      "city": "후쿠오카",
+      "now": {
+        "temp": 8.2,
+        "desc": "대체로 맑음",
+        "icon": "🌤️"
+      },
+      "today": {
         "min": 6.2,
         "max": 10.3,
+        "code": 1,
+        "desc": "대체로 맑음",
+        "icon": "🌤️"
+      },
+      "tomorrow": {
+        "min": 7.6,
+        "max": 10.2,
         "code": 1,
         "desc": "대체로 맑음",
         "icon": "🌤️"
