@@ -1,1 +1,9 @@
 feedparser
+Flask
+Pillow
+pystray
+psutil
+yfinance
+pytz
+requests
+beautifulsoup4

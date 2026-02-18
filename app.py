@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, abort
+from flask import Flask, request, jsonify, send_from_directory, send_file, abort
 import json, threading, os, time, re, sys
 from datetime import datetime
 import requests
@@ -10,6 +10,8 @@ import yfinance as yf
 import pytz
 import feedparser
 from pathlib import Path
+from PIL import Image
+import io
 
 # =========================================================
 # 경로/환경 (Installer-friendly)
@@ -45,9 +47,14 @@ DATA_ROOT.mkdir(parents=True, exist_ok=True)
 OVERLAY_DATA_DIR = DATA_ROOT / "overlay"
 OVERLAY_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
+# 배경이미지는 AppData\data\backgrounds 에 저장
+BACKGROUNDS_DIR = DATA_ROOT / "backgrounds"
+BACKGROUNDS_DIR.mkdir(parents=True, exist_ok=True)
+
 # 정적 파일은 설치폴더 overlay/admin 에서 제공
 OVERLAY_STATIC_DIR = BASE_DIR / "overlay"
 ADMIN_STATIC_DIR = BASE_DIR / "admin"
+BACKGROUNDS_STATIC_DIR = BASE_DIR / "backgrounds"  # 로컬 테스트용
 
 SOOP_CLIENT_ID = os.environ.get("SOOP_CLIENT_ID", "").strip()
 WORK24_API_KEY = os.getenv("WORK24_API_KEY", "").strip()
@@ -59,6 +66,7 @@ def _p(name: str) -> str:
     return str(OVERLAY_DATA_DIR / name)
 
 THEME_PATH    = _p("theme.json")
+BACKGROUND_PATH = _p("background.json")
 BREAKING_PATH = _p("breaking.json")
 BANNER_PATH   = _p("banner.json")
 STOCK_PATH    = _p("stock.json")
@@ -67,7 +75,7 @@ LAYOUT_PATH   = _p("layout.json")
 LIVE_PATH     = _p("live.json")
 ROOKIE_PATH   = _p("rookie.json")
 UI_PATH       = _p("ui.json")
-SOOP_TOP_PATH = _p("soop_top.json")
+SOOP_TOP_PATH = _p("soop_top.json")ㅊ
 
 JOBS_JP_PATH  = _p("jobs_jp.json")
 JOBS_JP_CFG   = _p("jobs_jp_config.json")
@@ -95,11 +103,16 @@ def create_app(data_root: Path | None = None) -> Flask:
     # (기본값은 위에서 계산된 AppData/data)
     if data_root is not None:
         # override
-        global DATA_ROOT, OVERLAY_DATA_DIR
+        global DATA_ROOT, OVERLAY_DATA_DIR, BACKGROUNDS_DIR, BACKGROUNDS_STATIC_DIR
         DATA_ROOT = Path(data_root)
         DATA_ROOT.mkdir(parents=True, exist_ok=True)
         OVERLAY_DATA_DIR = DATA_ROOT / "overlay"
         OVERLAY_DATA_DIR.mkdir(parents=True, exist_ok=True)
+        BACKGROUNDS_DIR = DATA_ROOT / "backgrounds"
+        BACKGROUNDS_DIR.mkdir(parents=True, exist_ok=True)
+        # 로컬 테스트: backgrounds도 프로젝트 폴더에서 읽기
+        BACKGROUNDS_STATIC_DIR = BASE_DIR / "backgrounds"
+        BACKGROUNDS_STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
     register_routes(app)
     return app
@@ -351,6 +364,103 @@ def register_routes(app: Flask) -> None:
     def theme_clear():
         _atomic_write_json(THEME_PATH, {})
         return jsonify(ok=True)
+
+    # =========================
+    # API: background
+    # =========================
+    @app.route("/api/backgrounds/list", methods=["GET"])
+    def backgrounds_list():
+        """배경이미지 폴더 내 이미지 파일 목록 반환"""
+        try:
+            files = []
+            if BACKGROUNDS_STATIC_DIR.exists():
+                # 이미지 파일 확장자
+                image_exts = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
+                for f in sorted(BACKGROUNDS_STATIC_DIR.iterdir()):
+                    if f.is_file() and f.suffix.lower() in image_exts:
+                        files.append(f.name)
+            return jsonify(files=files)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+
+    @app.route("/api/backgrounds/thumbnail/<filename>", methods=["GET"])
+    def backgrounds_thumbnail(filename: str):
+        """배경이미지 썸네일 제공 (최대 200x150)"""
+        try:
+            # 보안: 파일명에 .. 등이 포함되지 않도록 필터
+            if ".." in filename or "/" in filename or "\\" in filename:
+                return abort(400)
+            
+            filepath = BACKGROUNDS_STATIC_DIR / filename
+            if not filepath.exists() or not filepath.is_file():
+                return abort(404)
+            
+            # 이미지 열기
+            img = Image.open(filepath)
+            # 썸네일 생성 (200x150)
+            img.thumbnail((200, 150), Image.Resampling.LANCZOS)
+            
+            # 메모리에 저장
+            img_io = io.BytesIO()
+            img.save(img_io, format="PNG")
+            img_io.seek(0)
+            
+            return send_file(img_io, mimetype="image/png", download_name=None)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+
+    @app.route("/api/backgrounds/image/<filename>", methods=["GET"])
+    def backgrounds_image(filename: str):
+        """전체 배경이미지 제공"""
+        try:
+            if ".." in filename or "/" in filename or "\\" in filename:
+                return abort(400)
+            
+            filepath = BACKGROUNDS_STATIC_DIR / filename
+            if not filepath.exists() or not filepath.is_file():
+                return abort(404)
+            
+            return send_file(str(filepath), download_name=None)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+
+    @app.route("/api/backgrounds/set", methods=["POST"])
+    def backgrounds_set():
+        """선택한 배경이미지 저장"""
+        try:
+            data = request.json or {}
+            filename = str(data.get("filename", "")).strip()
+            
+            if not filename or ".." in filename or "/" in filename or "\\" in filename:
+                return jsonify(error="Invalid filename"), 400
+            
+            filepath = BACKGROUNDS_STATIC_DIR / filename
+
+            if not filepath.exists():
+                return jsonify(error="File not found"), 404
+            
+            # background.json에 저장
+            _atomic_write_json(BACKGROUND_PATH, {"current": filename})
+            return jsonify(ok=True, current=filename)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+
+    # =========================
+    # Debug: 경로 확인
+    # =========================
+    @app.route("/debug/paths", methods=["GET"])
+    def debug_paths():
+        """로컬 테스트 시 경로 확인용"""
+        return jsonify(
+            base_dir=str(BASE_DIR),
+            appdata_root=str(APPDATA_ROOT),
+            data_root=str(DATA_ROOT),
+            overlay_static_dir=str(OVERLAY_STATIC_DIR),
+            overlay_data_dir=str(OVERLAY_DATA_DIR),
+            backgrounds_static_dir=str(BACKGROUNDS_STATIC_DIR),
+            backgrounds_exists=BACKGROUNDS_STATIC_DIR.exists(),
+            backgrounds_files=[f.name for f in sorted(BACKGROUNDS_STATIC_DIR.iterdir()) if f.is_file()] if BACKGROUNDS_STATIC_DIR.exists() else []
+        )
 
     # =========================
     # API: layout

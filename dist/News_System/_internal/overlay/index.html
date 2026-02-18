@@ -5,6 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SOOP 방송용 정보 대쉬보드</title>
   <link rel="stylesheet" href="/overlay/style.css" />
+  
+  <!-- 테마 및 배경이미지 즉시 로드 -->
+  <script>
+    (async () => {
+      try {
+        // 1. theme.json 로드 및 CSS 변수 적용
+        const themeRes = await fetch("/overlay/theme.json?t=" + Date.now());
+        if (themeRes.ok) {
+          const theme = await themeRes.json();
+          const root = document.documentElement;
+          Object.entries(theme).forEach(([key, value]) => {
+            if (value) root.style.setProperty(key, value);
+          });
+        }
+      } catch (e) {
+        // 에러 무시
+      }
+
+      try {
+        // 2. background.json 로드 및 배경이미지 적용
+        const bgRes = await fetch("/overlay/background.json?t=" + Date.now());
+        if (bgRes.ok) {
+          const bg = await bgRes.json();
+          if (bg.current) {
+            const imgUrl = "/api/backgrounds/image/" + encodeURIComponent(bg.current);
+            document.body.style.backgroundImage = "url('" + imgUrl + "')";
+            document.body.style.backgroundSize = "cover";
+            document.body.style.backgroundPosition = "center";
+            document.body.style.backgroundAttachment = "fixed";
+          }
+        }
+      } catch (e) {
+        // 에러 무시
+      }
+    })();
+  </script>
 </head>
 <body>
   <!-- 🎥 멀티뷰(iframe) 영역 -->

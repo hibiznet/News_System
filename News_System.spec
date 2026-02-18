@@ -5,7 +5,7 @@ a = Analysis(
     ['app_main.py'],
     pathex=[],
     binaries=[],
-    datas=[('overlay', 'overlay'), ('admin', 'admin'), ('shared', 'shared')],
+    datas=[('overlay', 'overlay'), ('admin', 'admin'), ('shared', 'shared'), ('backgrounds', 'backgrounds')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
