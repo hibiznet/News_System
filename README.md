@@ -148,3 +148,4 @@ Admin:
 
 ## Installer 사용법 (아래 설치로 exe 파일 생성) ## 
 - py -3.12 -m PyInstaller --noconfirm --clean --name News_System --onedir --add-data "overlay;overlay" --add-data "admin;admin" --add-data "shared;shared" --add-data "backgrounds;backgrounds" app_main.py
+- py -3.12 -m PyInstaller --noconfirm --clean --windowed --name News_System --onedir --add-data "overlay;overlay" --add-data "admin;admin" --add-data "shared;shared" --add-data "backgrounds;backgrounds" app_main.py
