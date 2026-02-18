@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>테마 관리자</title>
+  <link rel="stylesheet" href="theme.css" />
+</head>
+<body>
+
+<h1>🎨 오버레이 테마 설정</h1>
+<p class="hint">색을 바꾸면 즉시 overlay/theme.json에 저장되고 오버레이가 자동 반영됩니다.</p>
+
+<div class="grid">
+
+  <div class="card">
+    <h2>전체</h2>
+    <label>전체 배경 (투명 추천)</label>
+    <input id="appBg" type="text" value="transparent" placeholder="transparent 또는 rgba(...)">
+  </div>
+
+  <div class="card">
+    <h2>우측 패널</h2>
+    <label>패널 기본 배경</label>
+    <input id="panelBg" type="text" value="rgba(0,0,0,0.55)" placeholder="rgba(...)">
+
+    <label>패널 글자색</label>
+    <input id="panelText" type="color" value="#ffffff">
+  </div>
+
+  <div class="card">
+    <h2>날씨</h2>
+    <label>날씨 배경</label>
+    <input id="weatherBg" type="text" value="rgba(0,0,0,0.65)" placeholder="rgba(...)">
+  </div>
+
+  <div class="card">
+    <h2>주식</h2>
+    <label>주식 배경</label>
+    <input id="stockBg" type="text" value="rgba(0,0,0,0.55)" placeholder="rgba(...)">
+  </div>
+
+  <div class="card">
+    <h2>배너</h2>
+    <label>배너 배경 (단색/그라데이션 모두 가능)</label>
+    <input id="bannerBg" type="text" value="linear-gradient(90deg, #111, #222)"
+           placeholder="예: #222 또는 linear-gradient(...)">
+  </div>
+
+  <div class="card">
+    <h2>하단 뉴스/속보</h2>
+    <label>일반 뉴스 바 배경</label>
+    <input id="lowerBg" type="color" value="#111111">
+
+    <label>속보 배경</label>
+    <input id="breakingBg" type="color" value="#b30000">
+
+    <label>하단 글자색</label>
+    <input id="lowerText" type="color" value="#ffffff">
+  </div>
+
+  <div class="card">
+    <h2>상승/하락 색</h2>
+    <label>상승(up) 색</label>
+    <input id="upColor" type="color" value="#ff4b4b">
+
+    <label>하락(down) 색</label>
+    <input id="downColor" type="color" value="#4da3ff">
+  </div>
+
+</div>
+
+<div class="actions">
+  <button class="primary" onclick="saveTheme()">저장/적용</button>
+  <button class="danger" onclick="resetTheme()">초기화</button>
+</div>
+
+<div id="status" class="status">대기 중</div>
+
+<script src="theme.js"></script>
+</body>
+</html>

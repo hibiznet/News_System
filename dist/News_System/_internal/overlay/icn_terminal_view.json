@@ -1,0 +1,17 @@
+{
+  "updated": "static",
+  "sourceName": "ICN Terminal Guide",
+  "items": [
+    {"airline":"대한항공", "iata":"KE", "icao":"KAL", "terminal":"T2"},
+    {"airline":"진에어", "iata":"LJ", "icao":"JNA", "terminal":"T2"},
+    {"airline":"에어프랑스", "iata":"AF", "icao":"AFR", "terminal":"T2"},
+    {"airline":"델타항공", "iata":"DL", "icao":"DAL", "terminal":"T2"},
+    {"airline":"KLM", "iata":"KL", "icao":"KLM", "terminal":"T2"},
+
+    {"airline":"아시아나항공", "iata":"OZ", "icao":"AAR", "terminal":"T1"},
+    {"airline":"제주항공", "iata":"7C", "icao":"JJA", "terminal":"T1"},
+    {"airline":"티웨이항공", "iata":"TW", "icao":"TWB", "terminal":"T1"},
+    {"airline":"에어서울", "iata":"RS", "icao":"ASV", "terminal":"T1"},
+    {"airline":"에어부산", "iata":"BX", "icao":"ABL", "terminal":"T1"}
+  ]
+}

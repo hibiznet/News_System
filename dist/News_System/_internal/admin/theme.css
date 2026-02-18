@@ -1,0 +1,74 @@
+body {
+  font-family: "Noto Sans KR", sans-serif;
+  background: #0b0b0b;
+  color: #fff;
+  padding: 24px;
+}
+
+h1 { margin: 0 0 8px; }
+.hint { opacity: 0.8; margin: 0 0 18px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.card {
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: #0f0f0f;
+  color: #fff;
+}
+
+input[type="color"] {
+  width: 90px;
+  height: 38px;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.actions {
+  margin-top: 18px;
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  padding: 10px 16px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.primary { background: #1e7bff; color: #fff; }
+.danger { background: #ff3b3b; color: #fff; }
+
+.status {
+  margin-top: 12px;
+  opacity: 0.85;
+}
