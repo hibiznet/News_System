@@ -75,7 +75,7 @@ LAYOUT_PATH   = _p("layout.json")
 LIVE_PATH     = _p("live.json")
 ROOKIE_PATH   = _p("rookie.json")
 UI_PATH       = _p("ui.json")
-SOOP_TOP_PATH = _p("soop_top.json")ㅊ
+SOOP_TOP_PATH = _p("soop_top.json")
 
 JOBS_JP_PATH  = _p("jobs_jp.json")
 JOBS_JP_CFG   = _p("jobs_jp_config.json")

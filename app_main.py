@@ -11,6 +11,40 @@ PORT = 5000
 _app = None
 _server_thread = None
 _running = True
+_console_visible = False  # 콘솔 창 처음에는 숨김
+
+# Windows 콘솔 제어
+def toggle_console():
+    """Windows 콘솔 창 표시/숨김 토글"""
+    global _console_visible
+    try:
+        if sys.platform == 'win32':
+            import ctypes
+            kernel32 = ctypes.windll.kernel32
+            hwnd = kernel32.GetConsoleWindow()
+            if hwnd:
+                if _console_visible:
+                    ctypes.windll.user32.ShowWindow(hwnd, 0)
+                    _console_visible = False
+                else:
+                    ctypes.windll.user32.ShowWindow(hwnd, 5)
+                    _console_visible = True
+    except Exception as e:
+        print(f"콘솔 토글 실패: {e}")
+
+def hide_console():
+    """콘솔 창 숨기기"""
+    global _console_visible
+    try:
+        if sys.platform == 'win32' and _console_visible:
+            import ctypes
+            kernel32 = ctypes.windll.kernel32
+            hwnd = kernel32.GetConsoleWindow()
+            if hwnd:
+                ctypes.windll.user32.ShowWindow(hwnd, 0)
+                _console_visible = False
+    except:
+        pass
 
 def port_in_use(port: int) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -41,20 +75,19 @@ def open_home(icon=None, item=None):
     """홈페이지 열기"""
     webbrowser.open(f"http://{HOST}:{PORT}/")
 
+def toggle_console_menu(icon=None, item=None):
+    """트레이 메뉴에서 콘솔 토글"""
+    toggle_console()
+
 def exit_app(icon=None, item=None):
     """앱 종료"""
     global _running, _app
     _running = False
-    if _app:
-        try:
-            # Flask 서버 중지
-            import requests
-            # 종료 신호 전송
-            threading.Timer(0.5, lambda: os.kill(os.getpid(), 9) if sys.platform == 'win32' else os.kill(os.getpid(), 15)).start()
-        except:
-            pass
     if icon:
         icon.stop()
+    # 0.5초 후 프로세스 종료 (스레드 생성 피함)
+    import atexit
+    atexit.register(lambda: os.kill(os.getpid(), 9) if sys.platform == 'win32' else os.kill(os.getpid(), 15))
 
 def setup_tray():
     """시스템 트레이 설정"""
@@ -68,6 +101,8 @@ def setup_tray():
         menu = (
             pystray.MenuItem('🏠 대시보드', open_home),
             pystray.MenuItem('🎛️ 관리 패널', open_admin),
+            pystray.MenuItem('-', None),
+            pystray.MenuItem('👁️ 로그 숨기기/보기', toggle_console_menu),
             pystray.MenuItem('-', None),
             pystray.MenuItem('❌ 끝내기', exit_app),
         )
@@ -109,6 +144,7 @@ def main():
         tray_icon = setup_tray()
         if tray_icon:
             print("📌 시스템 트레이에서 News_System을 찾을 수 있습니다.")
+            print("💡 팁: 트레이 메뉴에서 '로그 숨기기'를 선택하면 콘솔 창이 숨겨집니다.")
             try:
                 tray_icon.run()
             except KeyboardInterrupt:
