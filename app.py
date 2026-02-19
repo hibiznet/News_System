@@ -90,6 +90,9 @@ ICN_OUT_PATH  = _p("icn_terminal_view.json")
 
 PANELS_PATH   = _p("panels.json")
 
+# 새로운 환율 데이터 파일
+EXCHANGE_PATH = _p("exchange.json")
+
 # =========================================================
 # Flask Factory (런처에서 create_app()로 호출)
 # =========================================================
@@ -170,7 +173,8 @@ DEFAULT_PANELS = {
   "panels": {
     "jobsjp": {"enabled": True, "width": 360, "opacity": 0.22, "fontSize": 13},
     "jpwx":   {"enabled": True, "width": 360, "opacity": 0.22, "fontSize": 13},
-    "icn":    {"enabled": True, "width": 360, "opacity": 0.22, "fontSize": 13}
+    "icn":    {"enabled": True, "width": 360, "opacity": 0.22, "fontSize": 13},
+    "fx":     {"enabled": True, "width": 360, "opacity": 0.22, "fontSize": 13}
   }
 }
 
@@ -1348,6 +1352,40 @@ def icn_loop():
         update_icn_terminal_view()
         time.sleep(10)
 
+# --- 환율 패널 ---
+
+def update_exchange():
+    # fetch latest KRW↔JPY, USD, CNY rates from exchangerate.host
+    panels_data = _read_json(PANELS_PATH, DEFAULT_PANELS)
+    last_enabled = panels_data.get("panels", {}).get("fx", {}).get("enabled", True)
+    try:
+        url = "https://open.er-api.com/v6/latest/KRW"
+        r = requests.get(url, timeout=10, headers={"User-Agent":"Mozilla/5.0"})
+        r.raise_for_status()
+        data = r.json()
+        # bulk rates in data['rates']
+        raw = data.get("rates", {})
+        # pick only the ones we care about
+        rates = {k: raw.get(k) for k in ["JPY","USD","CNY"]}
+    except Exception:
+        # on failure, keep previous rates by reading existing file
+        prev = _read_json(EXCHANGE_PATH, {"rates": {}})
+        rates = prev.get("rates", {})
+    out = {
+        "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
+        "rates": rates,
+        "enabled": last_enabled
+    }
+    _atomic_write_json(EXCHANGE_PATH, out)
+    print("[EXCHANGE UPDATED]", out["updated"], rates)
+
+
+def exchange_loop():
+    while True:
+        update_exchange()
+        time.sleep(1800)
+
+
 
 # =========================================================
 # 최초 기본 JSON 생성 (AppData)
@@ -1381,6 +1419,7 @@ def ensure_default_files():
     ensure(JPWX_CFG, {"enabled": True, "ui": {"interval": 30}})
     ensure(ICN_CFG, {"enabled": True, "ui": {"show": 12, "query": ""}})
     ensure(PANELS_PATH, DEFAULT_PANELS)
+    ensure(EXCHANGE_PATH, {"updated": "", "rates": {}})
     ensure(BACKGROUND_ROTATION_PATH, {"enabled": False, "interval_minutes": 15})
 
 # ✅ ICN 입력 데이터: 설치폴더 overlay에 있으면 AppData로 초기 복사
@@ -1416,6 +1455,7 @@ def start_background_jobs(app: Flask, data_root: Path | None = None) -> None:
     threading.Thread(target=jobs_jp_loop, daemon=True).start()
     threading.Thread(target=jp_weather_loop, daemon=True).start()
     threading.Thread(target=icn_loop, daemon=True).start()
+    threading.Thread(target=exchange_loop, daemon=True).start()
     threading.Thread(target=background_rotation_loop, daemon=True).start()
 
 # =========================================================

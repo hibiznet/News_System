@@ -468,6 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupDraggablePanel("panel-jobsjp");
   setupDraggablePanel("panel-jpwx");
   setupDraggablePanel("panel-icn");
+  setupDraggablePanel("panel-fx");
 });
 
 
@@ -806,7 +807,7 @@ async function loadPanelSettings() {
     localStorage.removeItem("overlay.panel.panel-jobsjp.pos");
 
     // 표시
-    ["panel-icn","panel-jpwx","panel-jobsjp"].forEach(id=>{
+    ["panel-icn","panel-jpwx","panel-jobsjp","panel-fx"].forEach(id=>{
       const el = document.getElementById(id);
       if (el) el.style.display = "";
     });
@@ -815,6 +816,7 @@ async function loadPanelSettings() {
     applyPanel("panel-jobsjp", cfg.panels?.jobsjp);
     applyPanel("panel-jpwx",   cfg.panels?.jpwx);
     applyPanel("panel-icn",    cfg.panels?.icn);
+    applyPanel("panel-fx",     cfg.panels?.fx);
   } catch (e) {}
 }
 
@@ -840,9 +842,63 @@ setInterval(loadPanelSettings, 5000);
 loadPanelSettings();
 
 
+// ===== 환율 =====
+async function loadExchange() {
+  try {
+    const panelsRes = await fetch("/api/panels?t=" + Date.now(), {cache:"no-store"});
+    const panelsData = panelsRes.ok ? await panelsRes.json() : {};
+    const panelEnabled = panelsData.data?.panels?.fx?.enabled !== false;
+
+    const box = document.getElementById("fx-box");
+    if (!panelEnabled) {
+      if (box) box.style.display = "none";
+      return;
+    }
+
+    const res = await fetch("/overlay/exchange.json?t=" + Date.now(), {cache:"no-store"});
+    const data = await res.json();
+
+    const list = document.getElementById("fx-list");
+    const source = document.getElementById("fx-source");
+    const meta = document.getElementById("fx-meta");
+
+    source.textContent = data.sourceName || "환율";
+    // 설명: 값은 외화 1단위당 KRW 가격이다
+    meta.textContent = `업데이트 ${data.updated || ""} · 단위당 원화`;
+
+    const rates = data.rates || {};
+    const entries = [
+      {code: "JPY", name: "일본(¥)"},
+      {code: "USD", name: "미국($)"},
+      {code: "CNY", name: "중국(元)"},
+    ];
+
+    list.innerHTML = entries.map(e => {
+      const rate = rates[e.code];
+      // 원화 대비 환율(rate)보다는 1단위 외국통화에 대한 원화 가격이 보통 더 이해하기 쉽다.
+      // 따라서 화면에는 1/ rate 를 표시하며, 소수점 2자리로 고정.
+      let disp;
+      if (rate && rate !== 0) {
+        disp = (1 / rate).toFixed(2);
+      } else {
+        disp = "-";
+      }
+      return `<div class="job-card"><div class="job-title">${e.name}</div><div class="job-row"><span class="badge">${disp}</span></div></div>`;
+    }).join("");
+  } catch (e) {
+    const box = document.getElementById("fx-box");
+    if (box) box.style.display = "none";
+  }
+}
+
+
 setInterval(loadJobsJP, 5000);
 loadJobsJP();
 restartJobsJPTimer();
+
+// 환율 패널 로드
+setInterval(loadExchange, 60000);
+loadExchange();
 
 
 setInterval(loadRookie, 5000);

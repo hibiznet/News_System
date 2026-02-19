@@ -19,6 +19,12 @@
       "width": 360,
       "opacity": 0.05,
       "fontSize": 13
+    },
+    "fx": {
+      "enabled": true,
+      "width": 360,
+      "opacity": 0.22,
+      "fontSize": 13
     }
   }
 }

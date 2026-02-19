@@ -41,6 +41,7 @@
 <div class="card" id="p-jobsjp"></div>
 <div class="card" id="p-jpwx"></div>
 <div class="card" id="p-icn"></div>
+<div class="card" id="p-fx"></div>
 
 <script>
 let cfg = null;
@@ -87,6 +88,7 @@ async function reload(){
   document.getElementById("p-jobsjp").innerHTML = panelEditor("jobsjp", "🇯🇵 일본 취업 패널");
   document.getElementById("p-jpwx").innerHTML   = panelEditor("jpwx", "🇯🇵 일본 날씨 패널");
   document.getElementById("p-icn").innerHTML    = panelEditor("icn", "✈️ 인천공항 터미널 패널");
+  document.getElementById("p-fx").innerHTML     = panelEditor("fx", "💱 환율 패널");
 }
 
 function readPanel(key){
@@ -103,6 +105,7 @@ async function save(){
     jobsjp: readPanel("jobsjp"),
     jpwx:   readPanel("jpwx"),
     icn:    readPanel("icn"),
+    fx:     readPanel("fx"),
   }};
 
   await fetch("/api/panels", {

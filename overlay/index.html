@@ -200,6 +200,26 @@
     </div>
   </div>
 
+  <!-- 4) 환율 패널 -->
+  <div id="panel-fx" class="floating-panel">
+    <div class="floating-handle">
+      <span class="floating-title">💱 환율</span>
+      <div class="floating-actions">
+        <button data-panel="panel-fx" data-action="lock" class="floating-btn" type="button">🔓</button>
+        <button data-panel="panel-fx" data-action="close" class="floating-btn" type="button">✖</button>
+      </div>
+    </div>
+    <div class="floating-body">
+      <div id="fx-box" class="jobs-panel">
+        <div class="jobs-head">
+          <div class="jobs-source" id="fx-source"></div>
+          <div class="jobs-sub" id="fx-meta"></div>
+        </div>
+        <div id="fx-list" class="jobs-list"></div>
+      </div>
+    </div>
+  </div>
+
 
   <audio id="alert-sound" src="/overlay/disaster.wav" preload="auto"></audio>
 

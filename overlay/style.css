@@ -619,6 +619,7 @@ body {
 #panel-icn   { top: 120px; left: 20px; }
 #panel-jpwx  { top: 120px; left: 400px; }  /* 20 + 360 + 20 */
 #panel-jobsjp{ top: 120px; left: 780px; }  /* 400 + 360 + 20 */
+#panel-fx   { top: 120px; left: 1160px; }  /* +360 +20 from jobsjp */
 
 .floating-item {
   padding: 8px 10px;
