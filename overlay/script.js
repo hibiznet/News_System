@@ -397,6 +397,18 @@ function setupDraggablePanel(panelId){
       e.preventDefault(); e.stopPropagation();
       panel.style.display = "none";
       localStorage.setItem(KEY_HIDE, "1");
+      
+      // panels.json도 업데이트
+      const panelKey = panelId.replace("panel-", "");
+      fetch("/api/panels", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          panels: {
+            [panelKey]: {enabled: false}
+          }
+        })
+      }).catch(err => console.log("[savePanel] error", err));
     }, true);
   }
 
@@ -630,6 +642,17 @@ function restartJobsJPTimer() {
 
 async function loadJobsJP() {
   try {
+    // panels.json에서 jobsjp의 enabled 확인
+    const panelsRes = await fetch("/api/panels?t=" + Date.now(), {cache:"no-store"});
+    const panelsData = panelsRes.ok ? await panelsRes.json() : {};
+    const panelJobsJpEnabled = panelsData.data?.panels?.jobsjp?.enabled !== false;
+    
+    const box = document.getElementById("jobsjp-box");
+    if (!panelJobsJpEnabled) {
+      if (box) box.style.display = "none";
+      return;
+    }
+    
     const res = await fetch("/overlay/jobs_jp.json?t=" + Date.now(), { cache:"no-store" });
     const data = await res.json();
 
@@ -658,10 +681,20 @@ async function loadJobsJP() {
 
 async function loadJPWX() {
   try {
+    // panels.json에서 jpwx의 enabled 확인
+    const panelsRes = await fetch("/api/panels?t=" + Date.now(), {cache:"no-store"});
+    const panelsData = panelsRes.ok ? await panelsRes.json() : {};
+    const panelJpwxEnabled = panelsData.data?.panels?.jpwx?.enabled !== false;
+    
+    const box = document.getElementById("jpwx-box");
+    if (!panelJpwxEnabled) {
+      if (box) box.style.display = "none";
+      return;
+    }
+    
     const res = await fetch("/overlay/jp_weather.json?t=" + Date.now(), {cache:"no-store"});
     const data = await res.json();
 
-    const box = document.getElementById("jpwx-box");
     const list = document.getElementById("jpwx-list");
     const meta = document.getElementById("jpwx-meta");
     const source = document.getElementById("jpwx-source");
@@ -702,10 +735,20 @@ loadJPWX();
 
 async function loadICN() {
   try {
+    // panels.json에서 icn의 enabled 확인
+    const panelsRes = await fetch("/api/panels?t=" + Date.now(), {cache:"no-store"});
+    const panelsData = panelsRes.ok ? await panelsRes.json() : {};
+    const panelICNEnabled = panelsData.data?.panels?.icn?.enabled !== false;
+    
+    const box = document.getElementById("icn-box");
+    if (!panelICNEnabled) {
+      if (box) box.style.display = "none";
+      return;
+    }
+    
     const res = await fetch("/overlay/icn_terminal_view.json?t=" + Date.now(), {cache:"no-store"});
     const data = await res.json();
 
-    const box = document.getElementById("icn-box");
     const list = document.getElementById("icn-list");
     const meta = document.getElementById("icn-meta");
     const source = document.getElementById("icn-source");

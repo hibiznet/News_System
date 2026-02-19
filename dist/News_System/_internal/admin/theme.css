@@ -44,6 +44,21 @@ input[type="text"] {
   color: #fff;
 }
 
+input[type="number"] {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: #0f0f0f;
+  color: #fff;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #1e7bff;
+}
+
 input[type="color"] {
   width: 90px;
   height: 38px;
@@ -67,7 +82,11 @@ button {
 }
 
 .primary { background: #1e7bff; color: #fff; }
+.primary:hover { background: #1565cc; }
+.secondary { background: #444; color: #fff; }
+.secondary:hover { background: #555; }
 .danger { background: #ff3b3b; color: #fff; }
+.danger:hover { background: #dd2222; }
 
 .status {
   margin-top: 12px;

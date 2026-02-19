@@ -67,6 +67,7 @@ def _p(name: str) -> str:
 
 THEME_PATH    = _p("theme.json")
 BACKGROUND_PATH = _p("background.json")
+BACKGROUND_ROTATION_PATH = _p("background_rotation.json")
 BREAKING_PATH = _p("breaking.json")
 BANNER_PATH   = _p("banner.json")
 STOCK_PATH    = _p("stock.json")
@@ -164,7 +165,7 @@ JOB_SOURCES = {
 # DEFAULT_PANELS의 { ... } 부분은 원본에서 실제 값으로 채워야 합니다.
 # 일단 안전하게 최소 형태로 둡니다.
 DEFAULT_PANELS = {
-  "updated": "",
+  "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
   "resetToken": 0,
   "panels": {
     "jobsjp": {"enabled": True, "width": 360, "opacity": 0.22, "fontSize": 13},
@@ -445,6 +446,49 @@ def register_routes(app: Flask) -> None:
         except Exception as e:
             return jsonify(error=str(e)), 500
 
+    @app.route("/api/backgrounds/rotation/config", methods=["GET"])
+    def backgrounds_rotation_config_get():
+        """배경이미지 자동 회전 설정 조회"""
+        try:
+            cfg = _read_json(BACKGROUND_ROTATION_PATH, {})
+            return jsonify(
+                enabled=cfg.get("enabled", False),
+                interval_minutes=cfg.get("interval_minutes", 15)
+            )
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+
+    @app.route("/api/backgrounds/rotation/config", methods=["POST"])
+    def backgrounds_rotation_config_set():
+        """배경이미지 자동 회전 설정 변경"""
+        try:
+            data = request.json or {}
+            enabled = data.get("enabled", False)
+            interval_minutes = int(data.get("interval_minutes", 15))
+            
+            # 1~120분 범위 제약
+            interval_minutes = max(1, min(120, interval_minutes))
+            
+            cfg = {
+                "enabled": enabled,
+                "interval_minutes": interval_minutes
+            }
+            _atomic_write_json(BACKGROUND_ROTATION_PATH, cfg)
+            print(f"[BACKGROUND ROTATION CONFIG] enabled={enabled}, interval={interval_minutes}분")
+            return jsonify(ok=True, config=cfg)
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+
+    @app.route("/api/backgrounds/rotation/next", methods=["POST"])
+    def backgrounds_rotation_next():
+        """다음 배경이미지로 즉시 전환"""
+        try:
+            rotate_background()
+            current = _read_json(BACKGROUND_PATH, {})
+            return jsonify(ok=True, current=current.get("current", ""))
+        except Exception as e:
+            return jsonify(error=str(e)), 500
+
     # =========================
     # Debug: 경로 확인
     # =========================
@@ -683,6 +727,59 @@ def stock_loop():
     while True:
         update_stock()
         time.sleep(300)
+
+def rotate_background():
+    """배경이미지 자동 회전 함수"""
+    try:
+        # 회전 설정 로드
+        cfg = _read_json(BACKGROUND_ROTATION_PATH, {})
+        if not cfg.get("enabled", False):
+            return
+        
+        # 배경 이미지 파일 목록 가져오기
+        image_exts = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
+        files = []
+        if BACKGROUNDS_STATIC_DIR.exists():
+            for f in sorted(BACKGROUNDS_STATIC_DIR.iterdir()):
+                if f.is_file() and f.suffix.lower() in image_exts:
+                    files.append(f.name)
+        
+        if len(files) < 2:
+            # 이미지 1개 이하면 회전 불가
+            return
+        
+        # 현재 배경 확인
+        current = _read_json(BACKGROUND_PATH, {})
+        current_file = current.get("current", "")
+        
+        # 다음 이미지 선택 (순환)
+        if current_file in files:
+            idx = files.index(current_file)
+            next_file = files[(idx + 1) % len(files)]
+        else:
+            next_file = files[0]
+        
+        # 다음 배경으로 변경
+        _atomic_write_json(BACKGROUND_PATH, {"current": next_file})
+        print(f"[BACKGROUND ROTATED] {next_file}")
+    
+    except Exception as e:
+        print(f"[BACKGROUND ROTATION ERROR] {e}")
+
+def background_rotation_loop():
+    """배경이미지 자동 회전 루프"""
+    while True:
+        try:
+            cfg = _read_json(BACKGROUND_ROTATION_PATH, {})
+            interval_minutes = cfg.get("interval_minutes", 15)
+            # 10~20분 범위 제약
+            interval_minutes = max(1, min(120, interval_minutes))  # 1~120분
+            
+            rotate_background()
+            time.sleep(interval_minutes * 60)
+        except Exception as e:
+            print(f"[BACKGROUND ROTATION LOOP ERROR] {e}")
+            time.sleep(60)  # 에러시 1분 대기 후 재시도
 
 RSS_URL = "https://www.yna.co.kr/rss/news.xml"
 MAX_NEWS_ITEMS = 5
@@ -1053,6 +1150,10 @@ def update_jobs_jp():
     last_items = last.get("items", []) if isinstance(last, dict) else []
     if not isinstance(last_items, list):
         last_items = []
+    
+    # panels.json에서 enabled 상태를 읽어서 보존 (사용자가 패널을 닫은 상태 유지)
+    panels_data = _read_json(PANELS_PATH, DEFAULT_PANELS)
+    last_enabled = panels_data.get("panels", {}).get("jobsjp", {}).get("enabled", True)
 
     try:
         sourceName = JOB_SOURCES[source]["name"]
@@ -1081,6 +1182,7 @@ def update_jobs_jp():
                 "sourceName": sourceName,
                 "ui": cfg["ui"],
                 "items": last_items,
+                "enabled": last_enabled,
                 "disabled": False,
                 "warn": "parsed_but_empty",
                 "debug": {"url": url}
@@ -1092,7 +1194,8 @@ def update_jobs_jp():
                 "presetName": preset_name,
                 "sourceName": sourceName,
                 "ui": cfg["ui"],
-                "items": items
+                "items": items,
+                "enabled": last_enabled
             }
 
         _atomic_write_json(JOBS_JP_PATH, out)
@@ -1106,6 +1209,7 @@ def update_jobs_jp():
             "sourceName": JOB_SOURCES[source]["name"],
             "ui": cfg["ui"],
             "items": last_items,
+            "enabled": last_enabled,
             "disabled": False,
             "warn": f"exception:{type(e).__name__}",
             "debug": {"url": url}
@@ -1144,6 +1248,10 @@ def update_jp_weather():
     if not cfg.get("enabled", True):
         return
 
+    # panels.json에서 enabled 상태를 읽어서 보존 (사용자가 패널을 닫은 상태 유지)
+    panels_data = _read_json(PANELS_PATH, DEFAULT_PANELS)
+    last_enabled = panels_data.get("panels", {}).get("jpwx", {}).get("enabled", True)
+    
     out_items = []
     for c in JP_CITIES:
         url = (
@@ -1190,7 +1298,8 @@ def update_jp_weather():
         "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
         "sourceName": "Open-Meteo (JP Weather)",
         "ui": cfg.get("ui", {"interval": 30}),
-        "items": out_items
+        "items": out_items,
+        "enabled": last_enabled
     }
     _atomic_write_json(JPWX_PATH, out)
 
@@ -1210,6 +1319,10 @@ def update_icn_terminal_view():
     items = base.get("items", [])
     q = (cfg.get("ui", {}).get("query") or "").strip().lower()
     show = int(cfg.get("ui", {}).get("show", 12))
+    
+    # panels.json에서 enabled 상태를 읽어서 보존 (사용자가 패널을 닫은 상태 유지)
+    panels_data = _read_json(PANELS_PATH, DEFAULT_PANELS)
+    last_enabled = panels_data.get("panels", {}).get("icn", {}).get("enabled", True)
 
     if q:
         def match(it):
@@ -1220,7 +1333,8 @@ def update_icn_terminal_view():
         "updated": datetime.now(KST).strftime("%Y-%m-%d %H:%M"),
         "sourceName": base.get("sourceName", "ICN Terminal Guide"),
         "ui": cfg.get("ui", {"show": 12, "query": ""}),
-        "items": items[:show]
+        "items": items[:show],
+        "enabled": last_enabled
     }
     _atomic_write_json(ICN_OUT_PATH, out)
 
@@ -1262,6 +1376,7 @@ def ensure_default_files():
     ensure(JPWX_CFG, {"enabled": True, "ui": {"interval": 30}})
     ensure(ICN_CFG, {"enabled": True, "ui": {"show": 12, "query": ""}})
     ensure(PANELS_PATH, DEFAULT_PANELS)
+    ensure(BACKGROUND_ROTATION_PATH, {"enabled": False, "interval_minutes": 15})
 
 # ✅ ICN 입력 데이터: 설치폴더 overlay에 있으면 AppData로 초기 복사
 _copy_if_missing(ICN_TERM_PATH, OVERLAY_STATIC_DIR / "icn_terminals.json")
@@ -1296,6 +1411,7 @@ def start_background_jobs(app: Flask, data_root: Path | None = None) -> None:
     threading.Thread(target=jobs_jp_loop, daemon=True).start()
     threading.Thread(target=jp_weather_loop, daemon=True).start()
     threading.Thread(target=icn_loop, daemon=True).start()
+    threading.Thread(target=background_rotation_loop, daemon=True).start()
 
 # =========================================================
 # (개발용) 단독 실행 시 동작 - 설치형에서는 app_main.py 사용 권장
