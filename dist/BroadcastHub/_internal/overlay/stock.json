@@ -1,0 +1,27 @@
+{
+  "updated": "2026-02-18 23:59",
+  "domestic": {
+    "KOSPI": {
+      "price": 5507.01,
+      "change": -0.28
+    },
+    "KOSDAQ": {
+      "price": 1106.08,
+      "change": -1.77
+    }
+  },
+  "global": {
+    "NASDAQ": {
+      "price": 22757.25,
+      "change": 0.79
+    },
+    "DOW": {
+      "price": 49750.68,
+      "change": 0.41
+    },
+    "S&P500": {
+      "price": 6880.72,
+      "change": 0.51
+    }
+  }
+}

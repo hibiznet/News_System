@@ -190,8 +190,28 @@ def open_home(icon=None, item=None):
 def toggle_console_menu(icon=None, item=None):
     """트레이 메뉴에서 콘솔 토글 (스레드 안전)"""
     # 백그라운드 스레드에서 실행되므로 별도 스레드로 처리
-    log_action("콘솔 토글 시작...")
-    threading.Thread(target=toggle_console, daemon=True).start()
+    log_action("콘솔 표시 중...")
+    
+    def do_toggle():
+        hwnd = get_console_hwnd()
+        if hwnd:
+            # 콘솔이 있으면 콘솔 토글
+            toggle_console()
+        else:
+            # 콘솔이 없으면 새로운 콘솔 창 열기
+            try:
+                import subprocess
+                # 현재 Python 실행 파일과 앱을 새 콘솔에서 실행
+                script_path = Path(__file__).resolve()
+                subprocess.Popen(
+                    [sys.executable, str(script_path)],
+                    creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform == 'win32' else 0
+                )
+                log_info("새 콘솔 창에서 앱이 실행되었습니다")
+            except Exception as e:
+                log_error(f"새 콘솔 창 열기 실패: {e}")
+    
+    threading.Thread(target=do_toggle, daemon=True).start()
 
 def exit_app(icon=None, item=None):
     """앱 종료"""

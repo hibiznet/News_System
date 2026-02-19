@@ -1,9 +1,0 @@
-{
-  "source": "tokyodev",
-  "preset": "td_all",
-  "ui": {
-    "count": 1,
-    "roll": true,
-    "interval": 120
-  }
-}

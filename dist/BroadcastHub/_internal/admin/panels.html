@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>패널 관리</title>
+  <style>
+    body{background:#0b0b0b;color:#fff;font-family:"Noto Sans KR",sans-serif;padding:22px}
+    h1{margin:0 0 8px}
+    .hint{opacity:.7;font-size:12px;margin-bottom:14px}
+    .card{background:#111;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px;margin:12px 0}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+    label{font-weight:900;opacity:.9}
+    input[type="number"],input[type="range"]{accent-color:#1e7bff}
+    input[type="number"]{width:90px;padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#121212;color:#fff}
+    .btn{padding:10px 12px;border-radius:12px;border:none;font-weight:900;cursor:pointer}
+    .primary{background:#1e7bff;color:#fff}
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,.15);color:#fff}
+    .panel-title{font-size:14px;font-weight:900;margin-bottom:10px}
+    .kv{opacity:.75;font-size:12px}
+    .switch{display:flex;align-items:center;gap:8px}
+    .slider{width:220px}
+    #msg{margin-top:10px;opacity:.85}
+  </style>
+</head>
+<body>
+
+<h1>🧩 패널 관리</h1>
+<div class="hint">jobs / 일본날씨 / 인천터미널 패널을 개별 ON/OFF 하고 크기/투명도/폰트 크기를 저장합니다.</div>
+
+<div class="card">
+  <div class="row">
+    <button class="btn primary" onclick="save()">저장</button>
+    <button class="btn ghost" onclick="reload()">새로고침</button>
+    <button class="btn ghost" onclick="resetPanels()">모두 다시 표시</button>
+    <span class="kv" id="updated"></span>
+  </div>
+  <div id="msg">로딩중...</div>
+</div>
+
+<div class="card" id="p-jobsjp"></div>
+<div class="card" id="p-jpwx"></div>
+<div class="card" id="p-icn"></div>
+
+<script>
+let cfg = null;
+
+function panelEditor(key, title){
+  const p = cfg?.panels?.[key] || {};
+  return `
+    <div class="panel-title">${title}</div>
+
+    <div class="row switch">
+      <label>표시</label>
+      <input type="checkbox" id="${key}-enabled" ${p.enabled ? "checked":""}/>
+      <span class="kv">${key}</span>
+    </div>
+
+    <div class="row">
+      <label>너비(px)</label>
+      <input type="number" id="${key}-width" min="240" max="520" value="${p.width ?? 360}">
+      <span class="kv">240~520</span>
+    </div>
+
+    <div class="row">
+      <label>투명도</label>
+      <input class="slider" type="range" id="${key}-opacity" min="0.05" max="0.90" step="0.01" value="${p.opacity ?? 0.22}" oninput="document.getElementById('${key}-opacity-val').innerText=this.value">
+      <span class="kv" id="${key}-opacity-val">${p.opacity ?? 0.22}</span>
+    </div>
+
+    <div class="row">
+      <label>폰트(px)</label>
+      <input type="number" id="${key}-fontSize" min="10" max="20" value="${p.fontSize ?? 13}">
+      <span class="kv">10~20</span>
+    </div>
+  `;
+}
+
+async function reload(){
+  const r = await fetch("/api/panels");
+  const j = await r.json();
+  cfg = j.data;
+
+  document.getElementById("updated").innerText = "업데이트: " + (cfg.updated || "-");
+  document.getElementById("msg").innerText = "✅ 로드 완료";
+
+  document.getElementById("p-jobsjp").innerHTML = panelEditor("jobsjp", "🇯🇵 일본 취업 패널");
+  document.getElementById("p-jpwx").innerHTML   = panelEditor("jpwx", "🇯🇵 일본 날씨 패널");
+  document.getElementById("p-icn").innerHTML    = panelEditor("icn", "✈️ 인천공항 터미널 패널");
+}
+
+function readPanel(key){
+  return {
+    enabled: document.getElementById(`${key}-enabled`).checked,
+    width: Number(document.getElementById(`${key}-width`).value),
+    opacity: Number(document.getElementById(`${key}-opacity`).value),
+    fontSize: Number(document.getElementById(`${key}-fontSize`).value),
+  };
+}
+
+async function save(){
+  const body = { panels: {
+    jobsjp: readPanel("jobsjp"),
+    jpwx:   readPanel("jpwx"),
+    icn:    readPanel("icn"),
+  }};
+
+  await fetch("/api/panels", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(body)
+  });
+
+  document.getElementById("msg").innerText = "✅ 저장 완료 (오버레이 5초 내 반영)";
+  reload();
+}
+
+async function resetPanels(){
+  await fetch("/api/panels/reset", { method:"POST" });
+  document.getElementById("msg").innerText = "✅ 모두 다시 표시 요청 완료 (오버레이 5초 내 반영)";
+}
+
+reload();
+</script>
+</body>
+</html>

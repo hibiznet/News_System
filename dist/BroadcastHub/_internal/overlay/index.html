@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOOP 방송용 정보 대쉬보드</title>
+  <link rel="stylesheet" href="/overlay/style.css" />
+  
+  <!-- 테마 및 배경이미지 즉시 로드 -->
+  <script>
+    (async () => {
+      try {
+        // 1. theme.json 로드 및 CSS 변수 적용
+        const themeRes = await fetch("/overlay/theme.json?t=" + Date.now());
+        if (themeRes.ok) {
+          const theme = await themeRes.json();
+          const root = document.documentElement;
+          Object.entries(theme).forEach(([key, value]) => {
+            if (value) root.style.setProperty(key, value);
+          });
+        }
+      } catch (e) {
+        // 에러 무시
+      }
+
+      try {
+        // 2. background.json 로드 및 배경이미지 적용
+        const bgRes = await fetch("/overlay/background.json?t=" + Date.now());
+        if (bgRes.ok) {
+          const bg = await bgRes.json();
+          if (bg.current) {
+            const imgUrl = "/api/backgrounds/image/" + encodeURIComponent(bg.current);
+            document.body.style.backgroundImage = "url('" + imgUrl + "')";
+            document.body.style.backgroundSize = "cover";
+            document.body.style.backgroundPosition = "center";
+            document.body.style.backgroundAttachment = "fixed";
+          }
+        }
+      } catch (e) {
+        // 에러 무시
+      }
+    })();
+  </script>
+</head>
+<body>
+  <!-- 🎥 멀티뷰(iframe) 영역 -->
+  <div id="multiview"></div>
+
+  <!-- 우측 상단 정보 패널 -->
+  <div id="right-panel">
+
+    <!-- 🌤 날씨 -->
+    <div id="weather-box">
+
+      <!-- 🔴 방송 상태 -->
+      <div id="broadcast-badge" class="broadcast-badge" style="display:none;">
+        <span id="broadcast-dot" class="dot"></span>
+        <span id="broadcast-text">생방송중 Live!</span>
+      </div>
+
+      <!-- 🗓 현재 날짜/시간 -->
+      <div id="datetime-box" class="datetime-box">
+        <div id="current-date">--년--월 --일 ---요일</div>
+        <div id="current-time">--:--</div>
+      </div>
+
+
+      <div class="weather-today">
+        <div class="weather-title">오늘 날씨</div>
+        <div class="weather-main">
+          <span id="weather-icon">☀️</span>
+          <span id="weather-temp">--°C</span>
+        </div>
+        <div id="weather-desc">--</div>
+        <div class="weather-range">
+          최저 <span id="today-min">--</span>°
+          · 최고 <span id="today-max">--</span>°
+        </div>
+      </div>
+
+      <div class="weather-tomorrow">
+        <div class="weather-title">내일</div>
+        <div class="weather-range">
+          <span id="tomorrow-icon">🌤️</span>
+          최저 <span id="tomorrow-min">--</span>°
+          · 최고 <span id="tomorrow-max">--</span>°
+        </div>
+      </div>
+    </div>
+
+    <!-- 📈 오늘 주요 주식동향 -->
+    <div id="stock-box">
+      <div class="section-title">📈 오늘 주요 주식동향</div>
+      <ul>
+        <li><span>코스피</span><span id="KOSPI">-</span></li>
+        <li><span>코스닥</span><span id="KOSDAQ">-</span></li>
+        <li><span>다우</span><span id="DOW">-</span></li>
+        <li><span>나스닥</span><span id="NASDAQ">-</span></li>
+      </ul>
+    </div>
+
+    <!-- 📺 SOOP 인기방송 TOP5 (방송국 스타일) -->
+    <div id="soop-top-box" style="display:none;">
+      <div class="section-title">📺 SOOP 인기방송 TOP5</div>
+      <div id="soop-top-list" class="soop-top-list"></div>
+    </div>
+
+      <!-- 🆕 신입 스트리머 TOP10 -->
+    <div id="rookie-box" style="display:none;">
+      <div class="section-title">🆕 신입 스트리머 TOP10</div>
+      <div id="rookie-list" class="rookie-list"></div>
+    </div>    
+
+    <!-- 🔻 우측 배너(공지/협찬/광고 문구) -->
+    <div id="banner-box">
+      <div id="banner-text">협찬 · 공지 · 안내 문구</div>
+    </div>
+
+  </div>
+
+  <!-- (옵션) 하단 배너바: 필요할 때 banner.js에서 켜서 사용 -->
+  <div id="banner-bar">
+    <span id="banner-bar-text"></span>
+  </div>
+
+  <!-- ⬇ 하단 뉴스 / 속보 바 -->
+  <div id="lower-bar">
+
+    <!-- 재난 속보 -->
+    <div id="breaking-box">
+      <span class="label">재난속보</span>
+      <span id="breaking-text"></span>
+    </div>
+
+    <!-- 일반 뉴스 -->
+    <div id="news-box">
+      <span id="news-text"></span>
+    </div>
+
+  </div>
+
+  <!-- 🧩 드래그 가능한 추가 메뉴 패널 -->
+  <!-- 1) 일본취업 패널 -->
+  <div id="panel-jobsjp" class="floating-panel">
+    <div class="floating-handle">
+      <span class="floating-title">🇯🇵 일본 취업</span>
+      <div class="floating-actions">
+        <button data-panel="panel-jobsjp" data-action="lock" class="floating-btn" type="button">🔓</button>
+        <button data-panel="panel-jobsjp" data-action="close" class="floating-btn" type="button">✖</button>
+      </div>
+    </div>
+    <div class="floating-body">
+      <div id="jobsjp-box" class="jobs-panel">
+        <div class="jobs-head">
+          <div class="jobs-source" id="jobsjp-source"></div>
+          <div class="jobs-sub" id="jobsjp-meta"></div>
+        </div>
+        <div id="jobsjp-list" class="jobs-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2) 일본 날씨 패널 -->
+  <div id="panel-jpwx" class="floating-panel">
+    <div class="floating-handle">
+      <span class="floating-title">🇯🇵 일본 날씨</span>
+      <div class="floating-actions">
+        <button data-panel="panel-jpwx" data-action="lock" class="floating-btn" type="button">🔓</button>
+        <button data-panel="panel-jpwx" data-action="close" class="floating-btn" type="button">✖</button>
+      </div>
+    </div>
+    <div class="floating-body">
+      <div id="jpwx-box" class="jobs-panel">
+        <div class="jobs-head">
+          <div class="jobs-source" id="jpwx-source"></div>
+          <div class="jobs-sub" id="jpwx-meta"></div>
+        </div>
+        <div id="jpwx-list" class="jobs-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3) 인천공항 터미널 패널 -->
+  <div id="panel-icn" class="floating-panel">
+    <div class="floating-handle">
+      <span class="floating-title">✈️ ICN 터미널</span>
+      <div class="floating-actions">
+        <button data-panel="panel-icn" data-action="lock" class="floating-btn" type="button">🔓</button>
+        <button data-panel="panel-icn" data-action="close" class="floating-btn" type="button">✖</button>
+      </div>
+    </div>
+    <div class="floating-body">
+      <div id="icn-box" class="jobs-panel">
+        <div class="jobs-head">
+          <div class="jobs-source" id="icn-source"></div>
+          <div class="jobs-sub" id="icn-meta"></div>
+        </div>
+        <div id="icn-list" class="jobs-list"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <audio id="alert-sound" src="/overlay/disaster.wav" preload="auto"></audio>
+
+  <!-- JS 로딩 순서: 메인 → 기능(날씨/주식/배너) → 테마(최종 덮어쓰기) -->
+  <script src="/overlay/script.js"></script>
+  <script src="/overlay/weather.js"></script>
+  <script src="/overlay/stocks.js"></script>
+  <script src="/overlay/banner.js"></script>
+  <script src="/overlay/theme.js"></script>
+  <script src="/overlay/multiview.js"></script>
+
+</body>
+</html>
