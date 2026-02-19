@@ -686,6 +686,11 @@ def register_routes(app: Flask) -> None:
     @app.route("/api/panels/reset", methods=["POST"])
     def panels_reset():
         data = _read_json(PANELS_PATH, DEFAULT_PANELS)
+        # when resetting we want any panels that were disabled to come back
+        for key, p in data.get("panels", {}).items():
+            if isinstance(p, dict):
+                p["enabled"] = True
+
         data["resetToken"] = int(data.get("resetToken", 0)) + 1
         data["updated"] = datetime.now(KST).strftime("%Y-%m-%d %H:%M")
         _atomic_write_json(PANELS_PATH, data)
