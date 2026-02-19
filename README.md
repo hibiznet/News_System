@@ -151,6 +151,6 @@ Admin:
 - py -3.12 -m PyInstaller --noconfirm --clean --windowed --name News_System --onedir --add-data "overlay;overlay" --add-data "admin;admin" --add-data "shared;shared" --add-data "backgrounds;backgrounds" app_main.py
 - 콘솔창이 안보이면. pyinstaller News_System.spec 로 실행. (아래 명령어가 최적화)
 - py -3.12 -m PyInstaller --noconfirm --clean --console --name News_System --onedir --add-data "overlay;overlay" --add-data "admin;admin" --add-data "shared;shared" --add-data "backgrounds;backgrounds" app_main.py
-- py -3.12 -m PyInstaller --noconfirm --clean --console --name News_System --onedir --icon=icon.ico --add-data "overlay;overlay" --add-data "admin;admin" --add-data "shared;shared" --add-data "backgrounds;backgrounds" app_main.py
+- py -3.12 -m PyInstaller --noconfirm --clean --console --name BroadcastHub --onedir --icon=icon.ico --add-data "overlay;overlay" --add-data "admin;admin" --add-data "shared;shared" --add-data "backgrounds;backgrounds" app_main.py
 
   
